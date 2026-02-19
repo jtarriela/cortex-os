@@ -3,7 +3,7 @@
 
 ## Current Focus
 - **Phase 3 epic completion pass implemented (issue #4): search + state + secondary module persistence/analytics delivered across FE/BE/contracts.**
-- Next action: prepare PRs and gate verification for Phase 3 closure.
+- **Phase 4 epic foundation in progress (issue #5): backend AI IPC surface + privacy queue/log tables + frontend AI migration to backend calls.**
 
 ## System State (Facts Only)
 - Integration repo acting as workspace root.
@@ -83,7 +83,7 @@
 ## Functional Requirements
 - 27 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-027)
 - All sourced from frontend implementation
-- FR-020 through FR-022: Architectural goals (local-first, PII shield, HITL) — not yet implemented
+- FR-020 complete in backend foundation. FR-021/FR-022 now have Phase 4 foundation implementation (PII redaction + review queue); further provider hardening remains.
 
 ## Recent Progress (Append-only)
 - 2026-02-19: Documentation initialization.
@@ -100,3 +100,4 @@
 - 2026-02-19: FR-027 reconciliation completed in backend workspace branch. `integrations_trigger_sync` now does outbound updates/deletes, applies timestamp conflict policy (`local updated_at` vs Google `updated`), and removes orphaned Cortex events in Google via `cortex_page_id` correlation.
 - 2026-02-19: Phase 3 foundation increment implemented for epic #4/#7. Frontend migrated shell state to Zustand (`frontend/stores/appStore.ts`), added realtime Tauri event subscriptions (`frontend/stores/realtimeStore.ts`), and enhanced command palette filtering/highlighting/related badges (`frontend/components/CommandPalette.tsx`) with new tests. Backend emits page lifecycle events from mutation commands in `backend/crates/app/src/lib.rs`. Contracts wiring matrix updated with Event Streams section.
 - 2026-02-19: Phase 3 epic completion pass (workspace #4/#7/#4). Frontend added domain Zustand stores (`taskStore`, `projectStore`, `noteStore`) with optimistic CRUD and reduced prop drilling in `TasksIndex`, `ProjectsIndex`, `NotesLibrary`, and task modals; secondary polish shipped (Journal mood trend chart + date-window query, Goals progress summary chart, Finance month drill-down, Travel itinerary card loading). Backend added search provider extension with optional Ollama embeddings (hash fallback), semantic/graph commands, and secondary analytics commands (`journal_query`, `journal_mood_trends`, `habits_get_summary`, `goals_get_progress_summary`, `finance_get_summary`, `travel_get_itinerary`, `meals_get_nutrition_summary`). Contracts/backend/frontend docs and traceability updated; frontend+backend test suites green.
+- 2026-02-19: Phase 4 foundation slice implemented for epic #5/#8/#3. Backend added AI command surface (`ai_get_models`, `ai_chat`, `ai_summarize`, `ai_generate_image`, `ai_transcribe`, `ai_synthesize`, `ai_validate_key`, `review_list`, `review_approve`, `review_reject`, `token_usage`), regex-based PII redaction, streaming events (`ai_stream_chunk`, `ai_stream_done`), and SQLCipher migrations for `review_queue` + `usage_log`. Frontend migrated `services/aiService.ts` from frontend-direct Gemini SDK to backend IPC wrappers, wired streaming chunks into `RightDrawer`, and added Ollama endpoint configuration in `Settings`. New tests pass: `frontend/tests/backend_ai.spec.ts`, `frontend/tests/ai_service_migration.spec.ts`, `backend/crates/storage/tests/ai_phase4.rs`.
