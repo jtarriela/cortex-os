@@ -2,15 +2,15 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
-- **Phase 0.5 COMPLETE.** All 6 ADR-0011 Spike Gate validations passed. Phase 1 is unblocked.
-- Next action: Begin Phase 1 — Alpha Foundation (cortex-os issue #2).
+- **Phase 2 partial delivery for FR-027 is in progress.**
+- Next action: complete full Google Calendar reconciliation semantics (update/delete propagation + conflict policy).
 
 ## System State (Facts Only)
 - Integration repo acting as workspace root.
 - Submodules: frontend, backend, contracts.
-- Frontend: Phase 0 — React 19 prototype with in-memory mock data, direct Gemini AI calls.
-- Backend: Not yet implemented (architecture docs updated to match frontend features).
-- Contracts: IPC wiring matrix updated with all frontend service endpoints.
+- Frontend: backend IPC is wired for core domains; settings integrations flow supports Google connect/calendar selection/sync trigger.
+- Backend: Tauri app + SQLCipher storage + page repository implemented; Google OAuth + calendar list/create + incremental sync + outbound event creation are implemented.
+- Contracts: IPC wiring matrix maintained in contracts repo; integration commands are documented.
 - Original architecture vision in `docs/technical_architecture/` (001–004). Frontend has diverged (domain-specific types instead of unified Page model; no Tauri yet; AI in frontend, not backend).
 
 ## Active ADRs
@@ -81,7 +81,7 @@
 | cortex-os-contracts | #3 | [Epic] AI Command Specifications |
 
 ## Functional Requirements
-- 26 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-026)
+- 27 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-027)
 - All sourced from frontend implementation
 - FR-020 through FR-022: Architectural goals (local-first, PII shield, HITL) — not yet implemented
 
@@ -96,3 +96,4 @@
 - 2026-02-19: Phase 0.5 Contracts baseline (Contracts #1) complete. Updated IPC wiring matrix: BLOCKED enum, deprecated schedule.* commands, added calendar.getToday + meals.update/delete + recipes.update/delete, error response convention. Created CHANGELOG.md. Merged to main.
 - 2026-02-19: Phase 0.5 TipTap spike (BE #2) complete. 15 tests green: gray-matter round-trips YAML frontmatter; tiptap-markdown 0.9.0 round-trips body (headings, bold/italic, code, lists, links) in jsdom. Strip-and-reattach pattern confirmed. Packages: tiptap-markdown ✅, gray-matter ✅, @tiptap/extension-link not needed. FE PR #7 merged. TEST_EVIDENCE.md updated in backend main.
 - 2026-02-19: **Phase 0.5 COMPLETE.** All 6 ADR-0011 Spike Gate validations passed. All PRs merged. Phase 1 unblocked.
+- 2026-02-19: Phase 2 FR-027 hardening pass complete in workspace. Backend added real `integrations_trigger_sync` flow with OAuth token refresh, calendar discovery, Cortex calendar creation, inbound incremental pull to local `calendar_event` pages, and outbound creation for `sync_external` events. Frontend integrations flow updated and lint blockers resolved; tests expanded for sync/Settings behavior. Submodule commits: backend `c6b17a7`, frontend `14b0426`.
