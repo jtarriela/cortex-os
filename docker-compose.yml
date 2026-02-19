@@ -1,0 +1,59 @@
+# Cortex OS — Docker Compose
+#
+# Primary use: VS Code Dev Container (devshell service).
+# Future services (backend API, DB) will be added in Phase 1.
+#
+# Usage:
+#   Open in VS Code → "Reopen in Container" (uses .devcontainer/devcontainer.json)
+#   Or manually: docker compose up devshell
+
+services:
+
+  # ── Dev shell ─────────────────────────────────────────────────────────────
+  # The all-in-one dev environment: Node + Rust + Tauri deps.
+  # devcontainer.json targets this service as the interactive workspace.
+  devshell:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      # Mount the entire workspace
+      - .:/workspace:cached
+      # Persist Cargo registry cache between rebuilds
+      - cargo-registry:/home/dev/.cargo/registry
+      - cargo-git:/home/dev/.cargo/git
+      # Persist backend Rust build artifacts
+      - backend-target:/workspace/backend/target
+      # Persist frontend node_modules
+      - frontend-node-modules:/workspace/frontend/node_modules
+    ports:
+      - "5173:5173"   # Vite dev server
+      - "1420:1420"   # Tauri dev window (Phase 1+)
+    stdin_open: true
+    tty: true
+    # Keep container alive; devcontainer attaches a shell
+    command: sleep infinity
+    environment:
+      - DISPLAY=:99   # For headless xvfb (Tauri tests)
+
+  # ── Frontend dev (standalone, no IDE) ─────────────────────────────────────
+  # Run with: docker compose --profile dev up frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ./frontend:/workspace/frontend:cached
+      - frontend-node-modules:/workspace/frontend/node_modules
+    ports:
+      - "5173:5173"
+    working_dir: /workspace/frontend
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    profiles: ["dev"]
+
+# ── Named volumes ─────────────────────────────────────────────────────────────
+volumes:
+  cargo-registry:
+  cargo-git:
+  backend-target:
+  frontend-node-modules:

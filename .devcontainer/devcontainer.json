@@ -1,0 +1,57 @@
+{
+    "name": "Cortex OS",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "devshell",
+    "workspaceFolder": "/workspace",
+    "remoteUser": "dev",
+
+    // ── Port forwarding ──────────────────────────────────────────────────────
+    "forwardPorts": [
+        5173,   // Vite dev server (frontend)
+        1420    // Tauri dev window (backend, Phase 1+)
+    ],
+    "portsAttributes": {
+        "5173": { "label": "Frontend (Vite)", "onAutoForward": "notify" },
+        "1420": { "label": "Tauri Dev", "onAutoForward": "silent" }
+    },
+
+    // ── Post-create setup ────────────────────────────────────────────────────
+    "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+    // ── VS Code customizations ────────────────────────────────────────────────
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                // Rust
+                "rust-lang.rust-analyzer",
+                "tauri-apps.tauri-vscode",
+                "serayuzgur.crates",
+                // TypeScript / React
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "bradlc.vscode-tailwindcss",
+                // Docker
+                "ms-azuretools.vscode-docker",
+                // Utilities
+                "eamodio.gitlens",
+                "GitHub.vscode-pull-request-github",
+                "streetsidesoftware.code-spell-checker"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "editor.formatOnSave": true,
+                "rust-analyzer.cargo.features": "all",
+                "rust-analyzer.checkOnSave": true,
+                "[rust]": {
+                    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+                },
+                "[typescript]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                },
+                "[typescriptreact]": {
+                    "editor.defaultFormatter": "esbenp.prettier-vscode"
+                }
+            }
+        }
+    }
+}
