@@ -56,6 +56,45 @@
 - Close all remaining FE/BE/contracts Phase 4 checklist items.
 - Validate end-to-end gate criteria and regression coverage.
 
+## 2.1) Critical Blocker From Usability Sessions
+
+Observed in interactive testing:
+- Users report that core actions feel non-functional because there is no explicit vault onboarding flow and no visible storage target setup.
+- Result: app appears to “not save” or “not persist” in expected user mental model (Obsidian-style vault-first workflow).
+
+Formalized in ADR:
+- `docs/adrs/ADR-0015-vault-onboarding-and-secure-settings.md` (ACCEPTED)
+
+Proposed product/architecture direction:
+- Add a first-run **Vault Setup Splash**:
+  - `Create Vault`
+  - `Select Existing Vault`
+- On create:
+  - initialize Cortex vault folder structure
+  - seed required system starter cards/pages
+  - run initial indexing bootstrap
+- On select:
+  - validate structure
+  - run migration checks
+  - enqueue incremental reindex of missing/outdated items
+
+Data/indexing behavior recommendation:
+- Source of truth must be explicit (filesystem vault vs DB pages model) and documented.
+- Initial vault creation:
+  - create starter cards first
+  - index in background queue with progress UI
+- Ongoing edits:
+  - reindex only changed card/chunks on **save commit** (not full vault)
+  - debounce saves and use content-hash change detection
+  - keep embedding/index jobs async to avoid UI stalls
+
+Performance risk and mitigation:
+- Full re-embedding on every save is too expensive and will degrade UX.
+- Use incremental indexing queue + chunk-level dirty checks + provider rate limiting.
+
+Delivery impact:
+- This should be treated as a **blocking UX/system prerequisite** before Phase 4 gate closure, because without reliable vault onboarding/persistence semantics, AI and module workflows appear broken to end users.
+
 ## 3) Issue Closure Status
 
 No Phase 4 epic issues were closed in this slice because their gate checklists are still partially incomplete:
@@ -65,6 +104,34 @@ No Phase 4 epic issues were closed in this slice because their gate checklists a
 - `cortex-os-contracts#3`
 
 This slice is a **foundation** increment, not full epic closure.
+
+## 3.1) Phase 4 Child Issue Breakdown (Created)
+
+### Integration (`cortex-os`)
+- [#7](https://github.com/jtarriela/cortex-os/issues/7) — Cross-Repo Rollout: Vault Onboarding + Secure Settings (ADR-0015)
+- [#8](https://github.com/jtarriela/cortex-os/issues/8) — Gate Closure: Regression Matrix + End-to-End Usability Evidence
+
+### Frontend (`cortex-os-frontend`)
+- [#10](https://github.com/jtarriela/cortex-os-frontend/issues/10) — Vault Setup Splash + Create/Select Vault Flow
+- [#11](https://github.com/jtarriela/cortex-os-frontend/issues/11) — Save-Commit UX + Dirty State + Autosave Semantics
+- [#12](https://github.com/jtarriela/cortex-os-frontend/issues/12) — Morning Review UI (Approve/Reject/Edit + Batch)
+- [#13](https://github.com/jtarriela/cortex-os-frontend/issues/13) — AI Usage Dashboard (Token + Cost)
+- [#14](https://github.com/jtarriela/cortex-os-frontend/issues/14) — Provider/Model UI Finalization (Backend-Driven)
+
+### Backend (`cortex-os-backend`)
+- [#12](https://github.com/jtarriela/cortex-os-backend/issues/12) — Vault Profile Service + Create/Select Commands
+- [#13](https://github.com/jtarriela/cortex-os-backend/issues/13) — Secret Encryption Service (Keychain + DEK Wrapping)
+- [#14](https://github.com/jtarriela/cortex-os-backend/issues/14) — Save-Commit Triggered Incremental Indexing Queue
+- [#15](https://github.com/jtarriela/cortex-os-backend/issues/15) — Real Multi-Provider LLM Adapters (OpenAI/Anthropic/Gemini/Ollama)
+- [#16](https://github.com/jtarriela/cortex-os-backend/issues/16) — Voice Pipeline Hardening (Whisper tiers + TTS routing)
+- [#17](https://github.com/jtarriela/cortex-os-backend/issues/17) — RAG Commands: `ai_rag_query` + `ai_suggest_links`
+
+### Contracts (`cortex-os-contracts`)
+- [#6](https://github.com/jtarriela/cortex-os-contracts/issues/6) — Vault Onboarding Command Specs (create/select/profile)
+- [#7](https://github.com/jtarriela/cortex-os-contracts/issues/7) — Secret Storage Contract Conventions (encrypted fields + transport rules)
+- [#8](https://github.com/jtarriela/cortex-os-contracts/issues/8) — Save-Commit + Incremental Indexing Contract/Event Specs
+- [#9](https://github.com/jtarriela/cortex-os-contracts/issues/9) — RAG Command Specifications (`ai_rag_query`, `ai_suggest_links`)
+- [#10](https://github.com/jtarriela/cortex-os-contracts/issues/10) — Contracts Release: Version 0.4.0 + Changelog
 
 ## 4) Verified Build/Test Results
 
@@ -120,13 +187,13 @@ cargo tauri build --no-bundle
 
 ## D) Run usability test session (interactive app)
 ```bash
-# terminal 1: run frontend dev server
-cd frontend
-npm run dev
+# one command from repo root:
+./scripts/usability-session.sh
+```
 
-# terminal 2: run tauri app shell
-cd backend/crates/app
-cargo tauri dev
+Optional pass-through args to Tauri:
+```bash
+./scripts/usability-session.sh -- --verbose
 ```
 
 ## E) Manual usability checklist (minimum)
@@ -138,7 +205,9 @@ cargo tauri dev
 
 ## 6) Recommended Next PR Split
 
-1. `BE`: real provider adapters + keychain encryption + RAG commands.  
-2. `FE`: Morning Review view + usage dashboard.  
-3. `Contracts`: finalize remaining AI command specs + version bump.  
-4. `Integration`: submodule SHA pinning PR and Phase 4 gate closure report.
+1. `Integration+FE+BE`: Vault Setup Splash (`create/select vault`) + first-run onboarding + persistence semantics doc.  
+2. `BE`: incremental indexing queue (bootstrap + on-save reindex, hash-based dirty detection).  
+3. `BE`: real provider adapters + keychain encryption + RAG commands.  
+4. `FE`: Morning Review view + usage dashboard.  
+5. `Contracts`: finalize remaining AI command specs + version bump.  
+6. `Integration`: submodule SHA pinning PR and Phase 4 gate closure report.

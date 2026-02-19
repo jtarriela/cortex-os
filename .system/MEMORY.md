@@ -36,6 +36,7 @@
 - ADR-0011: Spike Gate — 6 validations before Phase 1 (ACCEPTED)
 - ADR-0012: Test strategy — TDD-first (ACCEPTED)
 - ADR-0013: Voice/Audio architecture — local Whisper + configurable TTS (ACCEPTED)
+- ADR-0015: Vault onboarding + secure settings + incremental reindex semantics (ACCEPTED)
 
 ## Roadmap — Issue Tracking
 
@@ -81,7 +82,7 @@
 | cortex-os-contracts | #3 | [Epic] AI Command Specifications |
 
 ## Functional Requirements
-- 27 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-027)
+- 28 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-028)
 - All sourced from frontend implementation
 - FR-020 complete in backend foundation. FR-021/FR-022 now have Phase 4 foundation implementation (PII redaction + review queue); further provider hardening remains.
 

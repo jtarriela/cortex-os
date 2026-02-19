@@ -35,6 +35,7 @@ When the frontend or backend evolves, update this file and the corresponding tra
 | **FR-025** | **Quick Capture:** Users shall be able to quickly capture text thoughts that are appended to a daily capture file (`Quick Capture/{date}.md`). Available from the Today Dashboard. |
 | **FR-026** | **Schedule management:** Users shall be able to view today's schedule as a timeline of time-blocked calendar events and tasks. Tasks are scheduled by setting `scheduled`, `start_time`, and `duration_min` properties, which surfaces them as CalendarEvent entries on the Today Dashboard. See ADR-0007 (ScheduleItem → CalendarEvent convergence). |
 | **FR-027** | **Google Calendar sync:** Users shall be able to connect a Google account via OAuth, view all calendars within that account, and toggle which calendars are visible on the Week Planner. Cortex creates a dedicated "Cortex" calendar in the user's Google account for outbound events. Inbound events from Google are read-only in Cortex; outbound events (tasks scheduled via drag-and-drop, Cortex-native events) sync to the Cortex Google calendar. Events are color-coded by source calendar. Cortex events support priority indicators and tags. The calendar grid supports week/month view toggle. See ADR-0014. |
+| **FR-028** | **Vault onboarding + secure preferences + incremental indexing:** On first run, users shall be able to create a new vault or select an existing vault. Cortex shall persist user settings/preferences per selected vault profile, store API keys/secrets encrypted at rest (keychain-backed key management), and trigger indexing only after successful save commits (with hash-based incremental reindex for changed content). See ADR-0015. |
 
 ### Notes
 
@@ -42,4 +43,5 @@ When the frontend or backend evolves, update this file and the corresponding tra
 - FR-020 through FR-023 describe architectural goals; partial Phase 0 implementations exist.
 - FR-024 through FR-026 cover features implemented in Phase 0 frontend.
 - FR-027 covers Google Calendar integration planned for Phase 2 (ADR-0014).
+- FR-028 covers Phase 4 vault onboarding and persistence/indexing semantics (ADR-0015).
 - All FRs are sourced from the frontend implementation as the current source of truth for features. Backend and contracts must implement the IPC commands to support these requirements.

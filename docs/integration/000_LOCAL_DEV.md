@@ -36,6 +36,20 @@ npm run dev
 # → Vite dev server at http://localhost:5173
 ```
 
+### Run full interactive usability session (frontend + Tauri)
+
+```bash
+# From repo root:
+./scripts/usability-session.sh
+```
+
+This script:
+- reads the Tauri `devUrl` port from `backend/crates/app/tauri.conf.json`
+- starts frontend dev server on that port
+- waits for readiness
+- launches `cargo tauri dev` from `backend/crates/app`
+- stops frontend server automatically when Tauri exits
+
 ### Run backend tests (Phase 0.5 spike)
 
 ```bash
