@@ -577,7 +577,258 @@ Board view grouped by `status` is the natural default — a Kanban of reading pr
 
 ------
 
-## 7) Custom Collections (User-Created)
+## 7) Goals
+
+> **Phase 0 Addition.** Not in the original architecture vision. Added during Phase 0 frontend prototyping. See ADR-0001, FR-012.
+
+### 7.1 Schema
+
+```json
+{
+    "id": "col_goals",
+    "name": "Goals",
+    "icon": "target",
+    "selector": { "kind": "goal" },
+    "schema": {
+        "title": { "type": "text", "required": true },
+        "description": { "type": "text" },
+        "goal_type": {
+            "type": "select",
+            "options": ["MONTHLY", "YEARLY", "LONG_TERM"],
+            "required": true,
+            "label": "Timeframe"
+        },
+        "progress": { "type": "number", "default": 0, "label": "Progress (%)" },
+        "target_date": { "type": "date", "label": "Target date" },
+        "status": {
+            "type": "select",
+            "options": ["IN_PROGRESS", "COMPLETED", "FAILED"],
+            "default": "IN_PROGRESS"
+        },
+        "project": {
+            "type": "relation",
+            "label": "Linked project"
+        }
+    },
+    "default_view": "view_goals_gallery",
+    "folder": "Goals"
+}
+```
+
+**Example goal page:**
+
+```markdown
+---
+id: pg_01JFC2...
+kind: goal
+title: Learn TypeScript
+description: Master advanced types and generics.
+goal_type: MONTHLY
+progress: 60
+target_date: 2026-03-31
+status: IN_PROGRESS
+project: /Projects/TS Mastery.md
+tags: [learning, engineering]
+created: 2026-02-01T10:00:00Z
+modified: 2026-02-18T14:30:00Z
+---
+# Learn TypeScript
+
+## Notes
+
+Week 1: Completed basic types, interfaces, and unions.
+Week 2: Working through generics and utility types.
+
+## Key Resources
+- TypeScript Handbook
+- Type Challenges repo
+```
+
+### 7.2 Views
+
+**Gallery View (default):** Cards showing title, type badge, progress bar, target date, and status indicator. Color-coded by status (green = in progress, blue = completed, red = failed).
+
+**Board View:** Kanban grouped by `status`. Columns: In Progress, Completed, Failed. Useful for reviewing goals at a glance.
+
+### 7.3 Goal → Project Linkage
+
+Goals can optionally link to a Project page via the `project` relation property. This creates a bidirectional connection:
+
+- Goal card shows linked project name
+- Project detail view shows linked goals in a sidebar widget
+- Progress can be synchronized (manual or AI-assisted) — when project milestones complete, the linked goal's progress can be updated
+
+------
+
+## 8) Meals & Recipes
+
+> **Phase 0 Addition.** Not in the original architecture vision. Added during Phase 0 frontend prototyping. See ADR-0002, FR-013.
+
+### 8.1 Schema
+
+```json
+{
+    "id": "col_meals",
+    "name": "Meals",
+    "icon": "utensils",
+    "selector": { "kind_any": ["meal", "recipe"] },
+    "schema": {
+        "meal_type": {
+            "type": "select",
+            "options": ["BREAKFAST", "LUNCH", "DINNER", "SNACK"],
+            "label": "Meal"
+        },
+        "date": { "type": "date" },
+        "description": { "type": "text" },
+        "calories": { "type": "number", "label": "Calories (kcal)" },
+        "recipe": {
+            "type": "relation",
+            "label": "Recipe"
+        },
+        "ingredients": {
+            "type": "multi_select",
+            "options": [],
+            "label": "Ingredients"
+        },
+        "instructions": { "type": "text", "label": "Instructions" },
+        "image_url": { "type": "url", "label": "Image", "hidden": true }
+    },
+    "default_view": "view_meals_list",
+    "folder": "Meals"
+}
+```
+
+Meals works as two kinds of pages:
+
+- `kind: meal` — a single meal entry (date, type, description, calories, optional recipe link)
+- `kind: recipe` — a recipe definition (title, ingredients, instructions, calories, image)
+
+The `recipe` relation on a meal page points to a recipe page, enabling reuse — log "Avocado Toast" for breakfast by linking to the recipe rather than re-entering details.
+
+**Example meal page:**
+
+```markdown
+---
+id: pg_01JFC3...
+kind: meal
+date: 2026-02-18
+meal_type: BREAKFAST
+description: Avocado toast with a fried egg
+calories: 350
+recipe: /Meals/recipes/avocado-toast.md
+tags: [breakfast, quick]
+created: 2026-02-18T08:00:00Z
+---
+# Breakfast — Feb 18
+
+Avocado toast with a fried egg and everything bagel seasoning.
+```
+
+**Example recipe page:**
+
+```markdown
+---
+id: pg_01JFC4...
+kind: recipe
+title: Avocado Toast
+ingredients: [bread, avocado, egg, salt, pepper, everything bagel seasoning]
+instructions: |
+  1. Toast bread until golden
+  2. Mash avocado with salt and pepper
+  3. Fry egg sunny-side up
+  4. Spread avocado on toast, top with egg
+calories: 350
+image_url: assets/avocado-toast.jpg
+tags: [breakfast, quick, vegetarian]
+created: 2026-02-01T12:00:00Z
+---
+# Avocado Toast
+
+A quick, healthy breakfast staple.
+```
+
+### 8.2 Views
+
+**List View (default, meals):** Date-grouped list of meals showing type badge, description, calories. Daily calorie total shown as a summary row.
+
+**Gallery View (recipes):** Card grid showing recipe image, title, calorie count, and tags. Filtered to `kind: recipe` only.
+
+### 8.3 Calorie Aggregation
+
+The collection query engine can compute daily/weekly calorie totals by aggregating `calories` across meals for a date range. This powers a dashboard widget showing nutritional trends.
+
+> **Phase 0 Divergence:** `Meals.tsx` manages all meal and recipe state locally in the component — no `dataService.ts` functions exist. This is the only module with this pattern. Before Phase 1 IPC wiring, CRUD must be extracted to `dataService.ts`. See traceability.md FR-013.
+
+------
+
+## 9) Journal & Mood Tracking
+
+> **Phase 0 Addition.** Not in the original architecture vision. Added during Phase 0 frontend prototyping. See ADR-0003, FR-010.
+
+### 9.1 Schema
+
+```json
+{
+    "id": "col_journal",
+    "name": "Journal",
+    "icon": "book-heart",
+    "selector": { "kind": "journal_entry" },
+    "schema": {
+        "date": { "type": "date", "required": true },
+        "mood": {
+            "type": "select",
+            "options": ["Happy", "Neutral", "Sad", "Stressed", "Energetic"],
+            "label": "Mood"
+        }
+    },
+    "default_view": "view_journal_list",
+    "default_sort": { "property": "date", "direction": "desc" },
+    "folder": "Journal"
+}
+```
+
+**Example journal entry page:**
+
+```markdown
+---
+id: pg_01JFC5...
+kind: journal_entry
+date: 2026-02-18
+mood: Energetic
+tags: [productivity, cortex]
+created: 2026-02-18T21:30:00Z
+---
+# Feb 18, 2026
+
+Productive day. Got the DB Actor pattern design done and started on the
+indexing pipeline. Feeling good about the architecture direction.
+
+Had a great workout in the morning — push day, bench is progressing.
+Energy was high all day, probably because I slept 7.5 hours.
+
+## Gratitude
+- Making progress on Cortex
+- Good weather for a walk at lunch
+- Partner made dinner
+```
+
+### 9.2 Views
+
+**List View (default):** Reverse-chronological feed. Each entry shows date, mood badge (emoji or colored dot), and a content preview. The full entry expands on click.
+
+### 9.3 Mood Analytics (Phase 4+)
+
+The structured `mood` property enables future analytics:
+
+- Mood trends over time (line chart, weekly/monthly)
+- Correlation with habits (e.g., "you tend to feel Energetic on days you work out")
+- AI-powered insights from journal content + mood data
+
+> **Phase 0 Divergence (MINOR):** The frontend implements `content` as a top-level field on the `JournalEntry` interface. In the Page model, content is the markdown body (below the frontmatter), not a frontmatter property. The migration is straightforward: `content` moves from frontmatter to the `## Body` of the markdown file.
+
+------
+
+## 10) Custom Collections (User-Created)
 
 Users can create their own collections via the Settings UI or by manually adding a JSON file to `.cortex/collections/`. The UI flow:
 
@@ -619,11 +870,11 @@ Users can create their own collections via the Settings UI or by manually adding
 
 ------
 
-## 8) Collection Query Engine (`collection_query`)
+## 11) Collection Query Engine (`collection_query`)
 
 This is the single most important backend function. Every view in the app calls it.
 
-### 8.1 Query Parameters
+### 11.1 Query Parameters
 
 ```typescript
 interface CollectionQueryParams {
@@ -650,7 +901,7 @@ interface Sort {
 }
 ```
 
-### 8.2 Query Execution
+### 11.2 Query Execution
 
 ```sql
 -- Generated query for: Travel collection, gallery view, status = "planning"
@@ -676,7 +927,7 @@ LIMIT 50;
 
 The query engine builds this SQL dynamically from the collection selector + view query + runtime params. The EAV pivot (MAX CASE) pattern is standard for this storage model.
 
-### 8.3 Result Shape (CardDTO)
+### 11.3 Result Shape (CardDTO)
 
 ```typescript
 interface CardDTO {
@@ -695,9 +946,9 @@ The frontend view components receive `CardDTO[]` and render based on layout type
 
 ------
 
-## 9) View Layout Specifications
+## 12) View Layout Specifications
 
-### 9.1 Gallery
+### 12.1 Gallery
 
 Grid of cards. Each card shows: cover image (optional), title, subtitle (template string from props), status badge, and 2–3 key properties.
 
@@ -714,7 +965,7 @@ Grid of cards. Each card shows: cover image (optional), title, subtitle (templat
 }
 ```
 
-### 9.2 Table
+### 12.2 Table
 
 Spreadsheet-style rows and columns. Columns are properties. Supports inline editing, column resize, column reorder, multi-sort.
 
@@ -733,7 +984,7 @@ Spreadsheet-style rows and columns. Columns are properties. Supports inline edit
 }
 ```
 
-### 9.3 Board (Kanban)
+### 12.3 Board (Kanban)
 
 Columns grouped by a `select` property (typically `status`). Cards are draggable between columns. Drag updates the property value → writes frontmatter → re-indexes.
 
@@ -748,7 +999,7 @@ Columns grouped by a `select` property (typically `status`). Cards are draggable
 }
 ```
 
-### 9.4 Calendar
+### 12.4 Calendar
 
 Pages with date properties placed on a month/week/day grid. Date range pages (start + end) render as spans. Drag to reschedule.
 
@@ -764,7 +1015,7 @@ Pages with date properties placed on a month/week/day grid. Date range pages (st
 }
 ```
 
-### 9.5 Map
+### 12.5 Map
 
 Pages with `location` properties plotted on a Leaflet map. Clusters for density. Click pin → card popup.
 
@@ -781,13 +1032,13 @@ Pages with `location` properties plotted on a Leaflet map. Clusters for density.
 }
 ```
 
-### 9.6 List
+### 12.6 List
 
 Simple vertical list. Minimal chrome. Good for quick scanning.
 
 ------
 
-## 10) Cross-Collection Relationships
+## 13) Cross-Collection Relationships
 
 Pages link to pages. A task can reference a project. A trip can reference related notes. These links are stored as:
 
@@ -809,7 +1060,7 @@ Or via graph traversal: find all pages within 1 hop of the Japan trip page.
 
 ------
 
-## 11) Collection Templates (Shipped with App)
+## 14) Collection Templates (Shipped with App)
 
 On first launch or when creating a new vault, Cortex offers to install collection templates:
 

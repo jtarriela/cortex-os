@@ -13,7 +13,7 @@ Cortex's AI layer follows three principles:
 
 1. **Backend-only execution.** All LLM calls happen in Rust. No API keys, no raw prompts, and no user content transits the frontend for cloud-bound requests.
 
-> **Phase 0 Divergence (SIGNIFICANT):** The frontend makes direct Gemini API calls from the browser via `@google/genai` SDK (`aiService.ts`). API keys are stored in React state and `localStorage`. This violates the "backend-only execution" principle but was a deliberate Phase 0 acceleration decision. See FE-AD-03, ADR-0004.
+> **Phase 0 Divergence (SIGNIFICANT):** The frontend makes direct Gemini API calls from the browser via `@google/genai` SDK (`aiService.ts`). API keys are stored in React state and `localStorage`. This violates the "backend-only execution" principle but was a deliberate Phase 0 acceleration decision. See `000_OVERVIEW.md` §7 FE-AD-03, ADR-0004.
 
 2. **Human-in-the-loop.** The AI proposes (suggested links, parsed inbox, extracted tasks). The user approves. No autonomous vault writes.
 

@@ -69,7 +69,7 @@ Reference: https://docs.rs/rusqlite/latest/rusqlite/
 See also: [[SQLite concurrency research]]
 ```
 
-> **Phase 0 Divergence:** The frontend `Task` type uses a simpler field set. **Missing from frontend:** `scheduled`, `start_time`, `duration_min`, `area`, `energy`, `recurring`, `recurrence_rule`, `blocked_by`, `completed_at`. **Added in frontend (not in vision):** `taskType` (enum: Project, Task, Bug, Dev, Work), `comments` (embedded array), `boardColumnId`. The frontend also uses `TODO | DOING | DONE | ARCHIVED` (no `BLOCKED` status). See FE-AD-04. **Resolution:** See `ADR-0008` — BLOCKED is required and will be added in Phase 1.
+> **Phase 0 Divergence:** The frontend `Task` type uses a simpler field set. **Missing from frontend:** `scheduled`, `start_time`, `duration_min`, `area`, `energy`, `recurring`, `recurrence_rule`, `blocked_by`, `completed_at`. **Added in frontend (not in vision):** `taskType` (enum: Project, Task, Bug, Dev, Work), `comments` (embedded array), `boardColumnId`. The frontend also uses `TODO | DOING | DONE | ARCHIVED` (no `BLOCKED` status). See `000_OVERVIEW.md` §7 FE-AD-04, `005_TYPE_RECONCILIATION.md` §1. **Resolution:** See `ADR-0008` — BLOCKED is required and will be added in Phase 1.
 
 ### 1.2 Task Status Lifecycle
 

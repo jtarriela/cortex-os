@@ -16,7 +16,7 @@ Cortex is a **local-first Life OS** that treats every entity — task, event, tr
 1. **Vault files are the source of truth.** The database is derived and deletable.
 2. **Everything is a Page.** No separate entity tables. A task, a trip, and a journal entry are all `.md` files differentiated by `kind` in frontmatter.
 
-> **Phase 0 Divergence:** The frontend uses domain-specific TypeScript interfaces (`Task`, `Goal`, `JournalEntry`, `Meal`, `Recipe`, etc.) rather than a unified Page model. Each domain has its own type with bespoke fields. The backend will normalize these to the Page model internally. See FE-AD-04.
+> **Phase 0 Divergence:** The frontend uses domain-specific TypeScript interfaces (`Task`, `Goal`, `JournalEntry`, `Meal`, `Recipe`, etc.) rather than a unified Page model. Each domain has its own type with bespoke fields. The backend will normalize these to the Page model internally. See `000_OVERVIEW.md` §7 FE-AD-04, `005_TYPE_RECONCILIATION.md`.
 
 3. **Collections + Views are the universal abstraction.** "Travel," "Finance," and "Tasks" are configured collections, not bespoke modules.
 4. **Human-in-the-loop for AI writes.** The AI proposes; the user approves. No autonomous vault modifications.
@@ -48,7 +48,7 @@ Cortex is a **local-first Life OS** that treats every entity — task, event, tr
 | **Maps** | Leaflet + OpenStreetMap (v1); Google Maps (later) | Embedded map views in editor and collection layouts |
 | **Graph Viz** | d3-force on HTML Canvas | Interactive knowledge graph rendering (5k node target) |
 
-> **Phase 0 Reality:** The following stack items are **not yet implemented**: Tauri (App Shell), TipTap (Editor), TailwindCSS + shadcn/ui (Styling), Zustand (Client State), SQLite/SQLCipher (Database), sqlite-vec (Vector Search), FS Watch (notify crate), Ollama (LLM Local), LLM Gateway (Rust), PII Shield, Crypto, Maps (Leaflet), Graph Viz (d3), whisper-rs (STT Local). The frontend runs as a standalone Vite + React 19 web app with custom CSS variables for theming. AI integration uses the `@google/genai` SDK directly from the browser. State lives in `App.tsx` `useState`. Data is in-memory via `dataService.ts`. See FE-AD-01, FE-AD-02, FE-AD-03.
+> **Phase 0 Reality:** The following stack items are **not yet implemented**: Tauri (App Shell), TipTap (Editor), TailwindCSS + shadcn/ui (Styling), Zustand (Client State), SQLite/SQLCipher (Database), sqlite-vec (Vector Search), FS Watch (notify crate), Ollama (LLM Local), LLM Gateway (Rust), PII Shield, Crypto, Maps (Leaflet), Graph Viz (d3), whisper-rs (STT Local). The frontend runs as a standalone Vite + React 19 web app with custom CSS variables for theming. AI integration uses the `@google/genai` SDK directly from the browser. State lives in `App.tsx` `useState`. Data is in-memory via `dataService.ts`. See `000_OVERVIEW.md` §7 FE-AD-01 (state), FE-AD-02 (mock data), FE-AD-03 (Gemini direct calls).
 
 ### Crate Structure (Rust Backend)
 
@@ -254,8 +254,31 @@ The **Hybrid JSON + EAV** approach gives us both:
 - **EAV table (`page_props`)**: Fast SQL filtering, sorting, grouping across any property key. Powers `collection_query()`.
 - **JSON blob (`frontmatter_json`)**: Lossless round-trip back to YAML frontmatter. Preserves unknown/custom keys without schema migration.
 
-On index: parse YAML → store as JSON blob → also decompose into EAV rows for known typed keys.  
+On index: parse YAML → store as JSON blob → also decompose into EAV rows for known typed keys.
 On write: update YAML frontmatter from canonical property values → write `.md` file → re-index.
+
+### 2.5 Frontmatter Validation Rules
+
+The indexer must handle real-world edge cases gracefully. The vault is user-editable — files may be created in Obsidian, VS Code, or by hand with imperfect frontmatter.
+
+| Condition | Behavior |
+|-----------|----------|
+| **Missing frontmatter** (no `---` block) | Treat as `kind: note`. Auto-generate `id` (pg_ + ULID) and write it back to the file on first index. |
+| **Missing `id` field** | Indexer generates `pg_` + ULID, writes it into the file's YAML block. The ID is stable from that point forward. |
+| **Missing `kind` field** | Defaults to `note`. Logged as a warning. Page is still indexed and queryable. |
+| **Corrupt / unparseable YAML** | Skip indexing for this file. Surface an error in the UI ("N files failed to index"). Do **not** modify or delete the file. |
+| **Duplicate `id`** (two files claim same ID) | Both files are indexed. The indexer logs a conflict warning. Conflict is surfaced in Settings → Vault Health. Resolution is manual (user edits one file). |
+| **Unknown properties** | Preserved in `frontmatter_json` blob. Not decomposed to EAV (no `page_props` rows). Queryable via `json_extract()` but not via standard property filters. Survives round-trip writes. |
+| **Relation target missing** (e.g., `project: /Projects/Deleted.md`) | Stored as-is in `page_props`. UI shows an "unresolved link" indicator (dimmed, with warning icon). No cascade delete — relations are soft references. |
+| **Invalid date format** | Non-ISO-8601 date strings are stored as `value_text` (not `value_date`). Date filters won't match them. UI shows the raw string. |
+| **File naming** | On page creation, title is slugified: lowercase, spaces→hyphens, strip special characters (`/\:*?"<>\|`), limit to 200 chars. Collision appends `-1`, `-2`, etc. |
+| **Empty body** (frontmatter only, no markdown below) | Valid. Indexed normally. Body content is empty string. |
+| **Binary files in vault** | Ignored by indexer. Only `.md` files are indexed. |
+| **Symlinks** | Followed if they point to `.md` files within the vault root. Symlinks outside the vault root are ignored. |
+
+**Canonical date format:** ISO 8601. Dates as `YYYY-MM-DD`, datetimes as `YYYY-MM-DDTHH:MM` or `YYYY-MM-DDTHH:MM:SSZ`. The indexer parses these into `value_date` in `page_props`. Any non-conforming string is stored as text only.
+
+**ID format:** `pg_` prefix + 26-character ULID (Universally Unique Lexicographically Sortable Identifier). Example: `pg_01JF8KV2X3...`. ULIDs are preferred over UUIDv4 because they sort chronologically and are URL-safe.
 
 ---
 
@@ -605,6 +628,20 @@ Vault/                          # User-chosen root directory
 ├── Finance/
 │   ├── checking-account.md
 │   └── february-2026-budget.md
+├── Goals/                      # kind: goal (ADR-0001)
+│   └── learn-typescript.md
+├── Meals/                      # kind: meal, recipe (ADR-0002)
+│   ├── 2026-02-18-breakfast.md
+│   └── recipes/
+│       └── avocado-toast.md
+├── Journal/                    # kind: journal_entry (ADR-0003)
+│   └── 2026-02-18.md
+├── Habits/                     # kind: habit, habit_log
+│   ├── morning-meditation.md
+│   └── logs/
+│       └── 2026-02-18-meditation.md
+├── Workouts/                   # kind: workout, program (ADR-0009, Phase 4)
+│   └── 2026-02-18-push-day.md
 ├── Notes/
 │   ├── distributed-systems.md
 │   └── daily/
@@ -620,18 +657,24 @@ Vault/                          # User-chosen root directory
     │   ├── calendar.json
     │   ├── travel.json
     │   ├── finance.json
-    │   └── workouts.json
+    │   ├── workouts.json
+    │   ├── habits.json
+    │   ├── goals.json          # ADR-0001
+    │   ├── meals.json          # ADR-0002
+    │   └── journal.json        # ADR-0003
     └── views/
         ├── tasks-board.json
         ├── tasks-today.json
         ├── calendar-week.json
         ├── travel-gallery.json
-        └── finance-table.json
+        ├── finance-table.json
+        ├── goals-board.json
+        ├── meals-list.json
+        ├── journal-list.json
+        └── habits-board.json
 ```
 
 **Obsidian compatibility:** The vault is a standard directory of `.md` files. Users can open it in Obsidian, VS Code, or any text editor. The `.cortex/` folder contains only app configuration. Cortex-specific blocks (maps, etc.) render as readable fenced code blocks in other editors.
-
-> **Phase 0 Divergence:** The frontend has modules for Goals, Meals, and Journal that are absent from the vault structure above. When the vault is implemented, these will need folders: `Goals/`, `Meals/`, `Journal/`. The `.cortex/collections/` directory will also need corresponding collection templates: `goals.json`, `meals.json`, `journal.json`. See ADR-0001, ADR-0002, ADR-0003.
 
 ---
 
@@ -818,3 +861,71 @@ interface EditorExtensionConfig {
     // e.g., code_linting: { languages: ["python", "rust"], lint_on_save: true }
 }
 ```
+
+## Appendix D: AppSettings Schema
+
+The `settings_get()` and `settings_update()` IPC commands (Section 6.2) operate on `AppSettings`. This is the canonical type — the frontend should match this structure.
+
+```rust
+pub struct AppSettings {
+    // Theme
+    pub theme: Theme,                       // Dark | Light | System
+
+    // AI configuration (see 004_AI_INTEGRATION.md)
+    pub ai: AISettings,
+
+    // Privacy (see 004_AI_INTEGRATION.md Section 7)
+    pub pii_shield_level: PiiLevel,         // Strict | Moderate | Off
+    pub outbound_preview: bool,             // Show PII preview modal before cloud calls
+
+    // Feature flags (toggle domain modules)
+    pub features: FeatureFlags,
+
+    // Vault
+    pub vault_path: PathBuf,                // User-chosen vault root directory
+
+    // Editor
+    pub editor_extensions: Vec<EditorExtensionConfig>,  // See Appendix C
+}
+
+pub enum Theme { Dark, Light, System }
+
+pub enum PiiLevel { Strict, Moderate, Off }
+
+pub struct AISettings {
+    // Model selection
+    pub default_chat_model: String,         // e.g., "gpt-4o"
+    pub default_embed_model: String,        // e.g., "nomic-embed-text"
+    pub default_quick_model: String,        // e.g., "gpt-4o-mini"
+
+    // Voice (ADR-0013)
+    pub stt_provider: SttProvider,          // LocalWhisper | OpenAI | Gemini
+    pub tts_provider: TtsProvider,          // Gemini | OpenAI | Local
+    pub preferred_voice: String,            // Provider-specific voice ID
+    pub auto_speak: bool,                   // Auto-speak AI responses
+
+    // Budget guardrails (004_AI_INTEGRATION.md Section 8.4)
+    pub monthly_budget: Option<MonthlyBudget>,
+}
+
+pub enum SttProvider { LocalWhisper, OpenAI, Gemini }
+pub enum TtsProvider { Gemini, OpenAI, Local }
+
+pub struct MonthlyBudget {
+    pub provider: String,                   // "openai", "anthropic", "google"
+    pub soft_limit_tokens: u64,             // Warning at this threshold
+    pub hard_limit_tokens: u64,             // Block cloud calls at this threshold
+}
+
+pub struct FeatureFlags {
+    pub travel: bool,                       // default: true
+    pub finance: bool,                      // default: true
+    pub workouts: bool,                     // default: false (ADR-0009)
+    pub journal: bool,                      // default: true
+    pub habits: bool,                       // default: true
+    pub goals: bool,                        // default: true
+    pub meals: bool,                        // default: true
+}
+```
+
+> **Phase 0 Divergence:** The frontend stores these as React state in `App.tsx` with API keys in `localStorage`. Phase 1 migration: `AppSettings` moves to `app_config` table in SQLCipher. API keys move to OS keychain. `settings_get/update` IPC commands replace direct state mutation. See `005_TYPE_RECONCILIATION.md` Section 12 for field-by-field mapping.
