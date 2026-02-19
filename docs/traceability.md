@@ -38,3 +38,25 @@ This document maps each functional requirement (FR) defined in `functional_requi
 - **Arch:** = Architecture design documents (implementation planned)
 - **Test Location (planned):** Suggested test file paths. These tests do not exist yet.
 - When adding or modifying a requirement, update this matrix and link the new code.
+
+---
+
+## Phase → FR Mapping
+
+| Phase | Gate | FRs Addressed | GitHub Epic (cortex-os) |
+|-------|------|---------------|------------------------|
+| **0.5** Stabilization | Spike Gate (ADR-0011): 6 tech validations pass | FR-013 (Meals gap), FR-020 (local-first validation) | [#1](https://github.com/jtarriela/cortex-os/issues/1) |
+| **1** Alpha Foundation | All views load from backend; data persists | FR-001–FR-019 (persistence), FR-020 (local-first), FR-023 (FTS5 search) | [#2](https://github.com/jtarriela/cortex-os/issues/2) |
+| **2** Alpha Domains | Tasks + Calendar + Projects fully functional | FR-001, FR-002, FR-003, FR-004, FR-015, FR-026 | [#3](https://github.com/jtarriela/cortex-os/issues/3) |
+| **3** Beta Foundation | Semantic search + Zustand + real-time updates | FR-005, FR-008–FR-013, FR-023 | [#4](https://github.com/jtarriela/cortex-os/issues/4) |
+| **4** Beta AI+Privacy | AI via backend, PII shield, HITL, voice pipeline | FR-014, FR-021, FR-022, FR-024 | [#5](https://github.com/jtarriela/cortex-os/issues/5) |
+
+## Known Gaps (as of 2026-02-19)
+
+| Gap | FR | Issue | Status |
+|-----|-----|-------|--------|
+| Meals CRUD not in dataService.ts | FR-013 | FE [#1](https://github.com/jtarriela/cortex-os-frontend/issues/1) | Open — Phase 0.5 |
+| BLOCKED task status missing | FR-001 | FE [#1](https://github.com/jtarriela/cortex-os-frontend/issues/1) | Open — Phase 0.5 |
+| ScheduleItem not converged to CalendarEvent | FR-015/FR-026 | FE [#1](https://github.com/jtarriela/cortex-os-frontend/issues/1) | Open — Phase 0.5 |
+| Backend 001_SCHEMA.md superseded by ADR-0006 | FR-020 | BE [#3](https://github.com/jtarriela/cortex-os-backend/issues/3) | Open — Phase 1 |
+| No test files exist in any repo | All | FE [#1](https://github.com/jtarriela/cortex-os-frontend/issues/1) | Open — Phase 0.5 |
