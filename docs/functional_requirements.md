@@ -34,10 +34,12 @@ When the frontend or backend evolves, update this file and the corresponding tra
 | **FR-024** | **AI voice interaction:** Users shall be able to use voice input (speech-to-text) and receive spoken AI responses (text-to-speech). STT defaults to local Whisper (bundled, offline) with optional cloud fallback (OpenAI, Gemini). TTS provider is configurable in Settings (Gemini, OpenAI, local Piper in Phase 5+). Voice settings include STT/TTS provider selection, provider-specific voice selection, and auto-speak toggle. The voice pipeline is chained (STT → any LLM → TTS) and provider-agnostic. See ADR-0013. |
 | **FR-025** | **Quick Capture:** Users shall be able to quickly capture text thoughts that are appended to a daily capture file (`Quick Capture/{date}.md`). Available from the Today Dashboard. |
 | **FR-026** | **Schedule management:** Users shall be able to view today's schedule as a timeline of time-blocked calendar events and tasks. Tasks are scheduled by setting `scheduled`, `start_time`, and `duration_min` properties, which surfaces them as CalendarEvent entries on the Today Dashboard. See ADR-0007 (ScheduleItem → CalendarEvent convergence). |
+| **FR-027** | **Google Calendar sync:** Users shall be able to connect a Google account via OAuth, view all calendars within that account, and toggle which calendars are visible on the Week Planner. Cortex creates a dedicated "Cortex" calendar in the user's Google account for outbound events. Inbound events from Google are read-only in Cortex; outbound events (tasks scheduled via drag-and-drop, Cortex-native events) sync to the Cortex Google calendar. Events are color-coded by source calendar. Cortex events support priority indicators and tags. The calendar grid supports week/month view toggle. See ADR-0014. |
 
 ### Notes
 
 - FR-001 through FR-019 cover currently implemented features in the frontend (Phase 0).
 - FR-020 through FR-023 describe architectural goals; partial Phase 0 implementations exist.
 - FR-024 through FR-026 cover features implemented in Phase 0 frontend.
+- FR-027 covers Google Calendar integration planned for Phase 2 (ADR-0014).
 - All FRs are sourced from the frontend implementation as the current source of truth for features. Backend and contracts must implement the IPC commands to support these requirements.
