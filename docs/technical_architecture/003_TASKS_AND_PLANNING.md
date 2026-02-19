@@ -2,7 +2,7 @@
 
 **Status:** Draft v1
  **Date:** 2026-02-18
- **Parent:** `001_ARCHITECTURE_v1.md`
+ **Parent:** `001_architecture.md`
  **Scope:** Task lifecycle, project tracking, daily/weekly planning, calendar views, cross-view shared task model
 
 ------
@@ -68,6 +68,8 @@ Set up the dedicated blocking thread with tokio::sync::mpsc channels.
 Reference: https://docs.rs/rusqlite/latest/rusqlite/
 See also: [[SQLite concurrency research]]
 ```
+
+> **Phase 0 Divergence:** The frontend `Task` type uses a simpler field set. **Missing from frontend:** `scheduled`, `start_time`, `duration_min`, `area`, `energy`, `recurring`, `recurrence_rule`, `blocked_by`, `completed_at`. **Added in frontend (not in vision):** `taskType` (enum: Project, Task, Bug, Dev, Work), `comments` (embedded array), `boardColumnId`. The frontend also uses `TODO | DOING | DONE | ARCHIVED` (no `BLOCKED` status). See FE-AD-04.
 
 ### 1.2 Task Status Lifecycle
 
@@ -160,7 +162,7 @@ resources:
   - label: "GitHub Repo"
     url: "https://github.com/jtarriela/cortex-os"
   - label: "Architecture Docs"
-    url: "/docs/001_ARCHITECTURE_v1.md"
+    url: "/docs/001_architecture.md"
 tags: [project, engineering, cortex]
 created: 2026-02-15T08:00:00Z
 modified: 2026-02-18T14:30:00Z
@@ -175,7 +177,7 @@ Local-first Life OS. Markdown vault + encrypted DB + Notion-like views.
 - Demonstrate AI engineering skills for job applications
 
 ## Architecture Decisions
-- [[001_ARCHITECTURE_v1]]
+- [[001_architecture]]
 - [[002_COLLECTIONS]]
 
 ## Research Notes
@@ -426,6 +428,8 @@ tags: [inbox]
 ```
 
 Inbox items are parsed by the AI (Phase 4, Morning Review) into structured tasks/events/notes. Until then, they're searchable plain text.
+
+> **Phase 0 Divergence:** The Today Dashboard also includes a **schedule timeline** (FR-026) with time-blocked `ScheduleItem` entries (start time + duration) managed via `dataService.ts` (`getTodaySchedule`, `addToSchedule`). This is implemented as a separate `ScheduleItem` type, not through the Calendar event system described in Section 3. Tasks can be dragged onto the timeline to be scheduled.
 
 ### 4.4 End-of-Day Reflection
 

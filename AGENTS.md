@@ -56,7 +56,7 @@ docs/
 │   ├── 001_DEPLOYMENT.md
 │   └── 002_RELEASE_PROCESS.md               # submodule bump protocol
 ├── technical_architecture/                  # [Design] system-level architecture (original vision)
-│   ├── 001_ARCHITECTURE_v1.md               # System architecture, data model, stack, conventions
+│   ├── 001_architecture.md                  # System architecture, data model, stack, conventions
 │   ├── 002_COLLECTIONS.md                   # Collections & domain modules (schemas, views)
 │   ├── 003_TASKS_AND_PLANNING.md            # Tasks, planning, projects & calendar
 │   └── 004_AI_INTEGRATION.md               # AI/LLM gateway, RAG, PII shield, agentic roadmap

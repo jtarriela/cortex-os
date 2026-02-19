@@ -2,7 +2,7 @@
 
 **Status:** Draft v1
  **Date:** 2026-02-18
- **Parent:** `001_ARCHITECTURE_v1.md`
+ **Parent:** `001_architecture.md`
  **Scope:** LLM gateway, multi-provider support, secure key storage, RAG pipeline, PII shield, command/help RAG, agentic roadmap
 
 ------
@@ -12,7 +12,12 @@
 Cortex's AI layer follows three principles:
 
 1. **Backend-only execution.** All LLM calls happen in Rust. No API keys, no raw prompts, and no user content transits the frontend for cloud-bound requests.
+
+> **Phase 0 Divergence (SIGNIFICANT):** The frontend makes direct Gemini API calls from the browser via `@google/genai` SDK (`aiService.ts`). API keys are stored in React state and `localStorage`. This violates the "backend-only execution" principle but was a deliberate Phase 0 acceleration decision. See FE-AD-03, ADR-0004.
+
 2. **Human-in-the-loop.** The AI proposes (suggested links, parsed inbox, extracted tasks). The user approves. No autonomous vault writes.
+
+> **Phase 0 Divergence (SIGNIFICANT):** The AI agent has 4 function declarations (`addTask`, `addGoal`, `addJournalEntry`, `searchBrain`) that execute CRUD immediately when the LLM calls them. There is no approval queue, no Morning Review, and no undo. This is the most architecturally significant divergence from the original vision. See ADR-0005.
 3. **Provider-agnostic.** The user picks their provider and model. Cortex doesn't lock you into one vendor. Local inference (Ollama) is a first-class option.
 
 ------
@@ -345,7 +350,7 @@ fn chunk_note(body: &str, max_chars: usize, hard_max: usize) -> Vec<Chunk> {
 ### 4.5 SQLite Schema for RAG
 
 ```sql
--- Already defined in 001_ARCHITECTURE_v1.md:
+-- Already defined in 001_architecture.md:
 -- vec_chunks (sqlite-vec virtual table)
 -- chunks (metadata: page_id, heading_path, content_hash, content_text)
 -- graph_edges (for graph expansion step)
@@ -415,7 +420,35 @@ Files in `_inbox/` are processed by the AI:
 2. Parsed output appears in Morning Review for approval
 3. On approval: structured pages are created in the appropriate vault folders
 
-### 5.5 Task Extraction (Phase 4)
+### 5.6 Voice I/O (Phase 0 — Frontend-Direct)
+
+> **Not in original vision.** Added during Phase 0 frontend prototyping.
+
+The frontend implements voice interaction via direct Gemini API calls:
+
+- **Speech-to-text:** `transcribeAudio()` sends base64 WAV audio to Gemini for transcription
+- **Text-to-speech:** `generateSpeech()` sends text to Gemini TTS API, returns base64 audio
+- **Voice selection:** 5 voices (Puck, Charon, Kore, Fenrir, Zephyr) configurable in Settings
+- **Auto-speak toggle:** When enabled, AI responses are automatically spoken aloud
+- **Audio capture:** Browser MediaRecorder API for microphone input
+- **Live session:** Stub only (placeholder for Gemini Live API)
+
+See ADR-0004, FR-024.
+
+### 5.7 Image Generation (Phase 0 — Frontend-Direct)
+
+> **Not in original vision.** Added during Phase 0 frontend prototyping.
+
+The frontend generates images for project artifacts via `generateImageArtifact()`:
+
+- Uses Gemini image generation model
+- Prompt constructed from project title, description, and milestones
+- Generated image stored as base64 data URL on `Project.artifacts[]`
+- Accessible from Project Detail view
+
+See ADR-0004, FR-014.
+
+### 5.8 Task Extraction (Phase 4)
 
 On note save, scan for implicit action items:
 
@@ -751,6 +784,8 @@ The LLM can call well-defined Cortex tools via function-calling:
 | `get_schedule`    | date_range             | events + tasks | No (read-only)       |
 
 Read-only tools execute immediately. Write tools queue to Morning Review.
+
+> **Phase 0 Divergence:** The frontend already implements a subset of structured tool use (`addTask`, `addGoal`, `addJournalEntry`, `searchBrain`) but **without the HITL column**. All tools — including write tools — execute immediately via `dataService` CRUD. The `create_page` and `update_props` tools above show "Yes (Morning Review)" for HITL, but the Phase 0 implementation has "No" for all tools. See ADR-0005.
 
 ### 11.2 Medium-Term: Multi-Step Workflows
 

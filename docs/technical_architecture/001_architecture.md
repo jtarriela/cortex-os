@@ -1,6 +1,6 @@
-# Cortex Life OS — Architecture v1
+# Cortex Life OS — Architecture
 
-**Status:** Draft v1  
+**Status:** Draft v1 (annotated with Phase 0 divergences)
 **Date:** 2026-02-18  
 **Scope:** System architecture, data model, stack, conventions  
 **Companion docs:** `002_COLLECTIONS.md`, `003_TASKS_AND_PLANNING.md`, `004_AI_INTEGRATION.md`
@@ -15,8 +15,14 @@ Cortex is a **local-first Life OS** that treats every entity — task, event, tr
 
 1. **Vault files are the source of truth.** The database is derived and deletable.
 2. **Everything is a Page.** No separate entity tables. A task, a trip, and a journal entry are all `.md` files differentiated by `kind` in frontmatter.
+
+> **Phase 0 Divergence:** The frontend uses domain-specific TypeScript interfaces (`Task`, `Goal`, `JournalEntry`, `Meal`, `Recipe`, etc.) rather than a unified Page model. Each domain has its own type with bespoke fields. The backend will normalize these to the Page model internally. See FE-AD-04.
+
 3. **Collections + Views are the universal abstraction.** "Travel," "Finance," and "Tasks" are configured collections, not bespoke modules.
 4. **Human-in-the-loop for AI writes.** The AI proposes; the user approves. No autonomous vault modifications.
+
+> **Phase 0 Divergence:** The frontend's AI agent actions (`addTask`, `addGoal`, `addJournalEntry`, `searchBrain`) execute CRUD immediately via Gemini function-calling with no approval queue. The Morning Review HITL pattern is deferred to Phase 4. See ADR-0005.
+
 5. **Works out of the box.** All components bundle with the installer. No external services required for core functionality.
 
 ---
@@ -40,6 +46,8 @@ Cortex is a **local-first Life OS** that treats every entity — task, event, tr
 | **Crypto** | SQLCipher + argon2 + ring | DB encryption, key derivation, encrypted API key storage |
 | **Maps** | Leaflet + OpenStreetMap (v1); Google Maps (later) | Embedded map views in editor and collection layouts |
 | **Graph Viz** | d3-force on HTML Canvas | Interactive knowledge graph rendering (5k node target) |
+
+> **Phase 0 Reality:** The following stack items are **not yet implemented**: Tauri (App Shell), TipTap (Editor), TailwindCSS + shadcn/ui (Styling), Zustand (Client State), SQLite/SQLCipher (Database), sqlite-vec (Vector Search), FS Watch (notify crate), Ollama (LLM Local), LLM Gateway (Rust), PII Shield, Crypto, Maps (Leaflet), Graph Viz (d3). The frontend runs as a standalone Vite + React 19 web app with custom CSS variables for theming. AI integration uses the `@google/genai` SDK directly from the browser. State lives in `App.tsx` `useState`. Data is in-memory via `dataService.ts`. See FE-AD-01, FE-AD-02, FE-AD-03.
 
 ### Crate Structure (Rust Backend)
 
@@ -618,6 +626,8 @@ Vault/                          # User-chosen root directory
 
 **Obsidian compatibility:** The vault is a standard directory of `.md` files. Users can open it in Obsidian, VS Code, or any text editor. The `.cortex/` folder contains only app configuration. Cortex-specific blocks (maps, etc.) render as readable fenced code blocks in other editors.
 
+> **Phase 0 Divergence:** The frontend has modules for Goals, Meals, and Journal that are absent from the vault structure above. When the vault is implemented, these will need folders: `Goals/`, `Meals/`, `Journal/`. The `.cortex/collections/` directory will also need corresponding collection templates: `goals.json`, `meals.json`, `journal.json`. See ADR-0001, ADR-0002, ADR-0003.
+
 ---
 
 ## 9) Performance Budgets
@@ -676,6 +686,8 @@ Before any feature development begins, validate:
 - TipTap basic Markdown editing
 - Replace mock `dataService.ts` with Tauri invokes
 
+> **Phase 0 Actual:** The frontend prototype significantly exceeded the original Phase 0 scope. It includes full CRUD for 13 domain modules (including Goals, Meals, Journal — not in the original plan), direct Gemini AI integration with voice I/O (transcription + TTS), image generation, and agent tool-calling with 4 function declarations. The Spike Gate validation (Tauri, SQLCipher, TipTap) has NOT been done. See ADR-0001 through ADR-0005.
+
 ### Phase 1 — Vault + Indexing + Collections
 - Vault read/write/watch (FS adapter)
 - Indexing pipeline (frontmatter → EAV + FTS5)
@@ -733,6 +745,9 @@ Before any feature development begins, validate:
 | AD-12 | Collection config | `.cortex/` JSON files | Git-diffable, portable, user-inspectable | Migration story needed |
 | AD-13 | Custom blocks in MD | Fenced code blocks | Portable (renders as code in other editors) | Not invisible in Obsidian/VS Code |
 | AD-14 | AI writes | HITL only | Safety, trust, auditability | Slower than autonomous |
+| AD-15 | Frontend AI execution (Phase 0) | Direct Gemini SDK calls from browser | Fastest iteration path; backend gateway deferred to Phase 4 | API keys exposed in browser; single-provider only |
+| AD-16 | Domain-specific types (Phase 0) | Bespoke TS interfaces per domain | 1:1 mapping with UI; clearer than generic Page in frontend | Not the unified Page model; backend must normalize |
+| AD-17 | AI multimodal (Phase 0) | Voice I/O + image gen via Gemini | Enables rich AI UX prototyping before backend exists | Not in original vision; provider-locked to Gemini |
 
 ---
 

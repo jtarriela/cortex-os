@@ -2,7 +2,7 @@
 
 **Status:** Draft v1
  **Date:** 2026-02-18
- **Parent:** `001_ARCHITECTURE_v1.md`
+ **Parent:** `001_architecture.md`
  **Scope:** Collection definitions, schemas, and view configurations for life planning domains
 
 ------
@@ -10,6 +10,8 @@
 ## 0) Collections Philosophy
 
 "Travel," "Finance," "Workouts," and "Habits" are **not separate features with bespoke code.** They are **pre-configured Collections** — JSON definitions that tell the query engine which pages to select, what properties to expect, and which view layouts to offer.
+
+> **Phase 0 Divergence:** The frontend implements domain modules as bespoke React view components (`Goals.tsx`, `Meals.tsx`, `Journal.tsx`, `Habits.tsx`, `Travel.tsx`, etc.) with domain-specific TypeScript types, **not** as generic collection views. Each view has hardcoded UI rather than rendering through a universal `collection_query()` + layout engine. The migration to the collection abstraction will happen when the backend collection engine is built. See ADR-0001 (Goals), ADR-0002 (Meals), ADR-0003 (Journal).
 
 Adding a new life domain (e.g., "Recipes," "Reading List," "Home Projects") means creating a new `.cortex/collections/*.json` file and optionally a new view config. No Rust code changes. No frontend component changes.
 
@@ -822,5 +824,10 @@ On first launch or when creating a new vault, Cortex offers to install collectio
 | Habits   | habit, habit_log             | Board, Calendar                     | Habits/   |
 | Notes    | note                         | List, Gallery                       | Notes/    |
 | Reading  | reading                      | Board (status), Table               | Reading/  |
+| Goals    | goal                         | Gallery, Board (status)             | Goals/    |
+| Meals    | meal, recipe                 | List (date), Gallery (recipes)      | Meals/    |
+| Journal  | journal_entry                | List (reverse-chrono)               | Journal/  |
+
+> **Phase 0 Addition:** Goals, Meals, and Journal are not in the original vision. They were added during Phase 0 frontend prototyping. See ADR-0001, ADR-0002, ADR-0003.
 
 Users can modify any template after installation. Deleting a collection config doesn't delete the pages — they're still in the vault, just not grouped into a view.
