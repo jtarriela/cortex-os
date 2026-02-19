@@ -2,15 +2,15 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
-- **Phase 2 FR-027 reconciliation flow is implemented in workspace.**
-- Next action: validate end-to-end sync behavior in a live Google account and close BE #6.
+- **Phase 3 epic completion pass implemented (issue #4): search + state + secondary module persistence/analytics delivered across FE/BE/contracts.**
+- Next action: prepare PRs and gate verification for Phase 3 closure.
 
 ## System State (Facts Only)
 - Integration repo acting as workspace root.
 - Submodules: frontend, backend, contracts.
-- Frontend: backend IPC is wired for core domains; settings integrations flow supports Google connect/calendar selection/sync trigger.
-- Backend: Tauri app + SQLCipher storage + page repository implemented; Google OAuth + calendar list/create + incremental sync + outbound create/update/delete reconciliation are implemented.
-- Contracts: IPC wiring matrix maintained in contracts repo; integration commands are documented.
+- Frontend: backend IPC is wired for core domains; app shell state now uses Zustand (`stores/appStore.ts`); realtime event subscription store (`stores/realtimeStore.ts`) invalidates active views on backend page events.
+- Backend: Tauri app + SQLCipher storage + page repository implemented; Google OAuth + calendar list/create + incremental sync + outbound create/update/delete reconciliation are implemented; page mutation commands emit realtime events (`page_created`, `page_updated`, `page_deleted`).
+- Contracts: IPC wiring matrix maintained in contracts repo; realtime event stream contract documented for Phase 3 foundation.
 - Original architecture vision in `docs/technical_architecture/` (001–004). Frontend has diverged (domain-specific types instead of unified Page model; no Tauri yet; AI in frontend, not backend).
 
 ## Active ADRs
@@ -98,3 +98,5 @@
 - 2026-02-19: **Phase 0.5 COMPLETE.** All 6 ADR-0011 Spike Gate validations passed. All PRs merged. Phase 1 unblocked.
 - 2026-02-19: Phase 2 FR-027 hardening pass complete in workspace. Backend added real `integrations_trigger_sync` flow with OAuth token refresh, calendar discovery, Cortex calendar creation, inbound incremental pull to local `calendar_event` pages, and outbound creation for `sync_external` events. Frontend integrations flow updated and lint blockers resolved; tests expanded for sync/Settings behavior. Submodule commits: backend `c6b17a7`, frontend `14b0426`.
 - 2026-02-19: FR-027 reconciliation completed in backend workspace branch. `integrations_trigger_sync` now does outbound updates/deletes, applies timestamp conflict policy (`local updated_at` vs Google `updated`), and removes orphaned Cortex events in Google via `cortex_page_id` correlation.
+- 2026-02-19: Phase 3 foundation increment implemented for epic #4/#7. Frontend migrated shell state to Zustand (`frontend/stores/appStore.ts`), added realtime Tauri event subscriptions (`frontend/stores/realtimeStore.ts`), and enhanced command palette filtering/highlighting/related badges (`frontend/components/CommandPalette.tsx`) with new tests. Backend emits page lifecycle events from mutation commands in `backend/crates/app/src/lib.rs`. Contracts wiring matrix updated with Event Streams section.
+- 2026-02-19: Phase 3 epic completion pass (workspace #4/#7/#4). Frontend added domain Zustand stores (`taskStore`, `projectStore`, `noteStore`) with optimistic CRUD and reduced prop drilling in `TasksIndex`, `ProjectsIndex`, `NotesLibrary`, and task modals; secondary polish shipped (Journal mood trend chart + date-window query, Goals progress summary chart, Finance month drill-down, Travel itinerary card loading). Backend added search provider extension with optional Ollama embeddings (hash fallback), semantic/graph commands, and secondary analytics commands (`journal_query`, `journal_mood_trends`, `habits_get_summary`, `goals_get_progress_summary`, `finance_get_summary`, `travel_get_itinerary`, `meals_get_nutrition_summary`). Contracts/backend/frontend docs and traceability updated; frontend+backend test suites green.
