@@ -24,6 +24,7 @@ This document defines the **functional requirements** for Cortex OS at the inte
 | **FR‑016** | **Theme switching:** Users shall be able to switch between dark and light modes; the UI shall persist the selected theme across sessions【767791288689422†L73-L85】. |
 | **FR‑017** | **Responsive navigation:** The application shall provide a collapsible left navigation bar, a top bar, and a right drawer for secondary content and AI interactions【767791288689422†L170-L199】. |
 | **FR‑018** | **Accessibility and keyboard shortcuts:** The system shall provide keyboard shortcuts (e.g., `Ctrl/Cmd + K` for command palette, `Escape` to close modals) and accessible focus management【767791288689422†L87-L103】. |
+| **FR‑019** | **Workout tracking:** Users shall be able to view a history of workouts, log new sessions, and monitor activity trends via charts. Workouts include metadata such as date, name, duration and exercise count. |
 
 ### Notes
 
