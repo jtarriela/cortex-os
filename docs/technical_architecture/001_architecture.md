@@ -42,12 +42,13 @@ Cortex is a **local-first Life OS** that treats every entity — task, event, tr
 | **LLM Local** | Ollama (HTTP bridge to localhost) | Local inference + embeddings |
 | **LLM Cloud** | Provider HTTP APIs | OpenAI, Anthropic, Google via BYOK keys |
 | **LLM Gateway** | Rust abstraction layer | Provider-agnostic routing, streaming, token accounting |
+| **STT (Local)** | whisper-rs (whisper.cpp bindings) | Bundled offline speech-to-text, GGML models. See ADR-0013 |
 | **PII Shield** | Rust regex patterns (v1); ONNX NER (later) | Client-side PII redaction before cloud calls |
 | **Crypto** | SQLCipher + argon2 + ring | DB encryption, key derivation, encrypted API key storage |
 | **Maps** | Leaflet + OpenStreetMap (v1); Google Maps (later) | Embedded map views in editor and collection layouts |
 | **Graph Viz** | d3-force on HTML Canvas | Interactive knowledge graph rendering (5k node target) |
 
-> **Phase 0 Reality:** The following stack items are **not yet implemented**: Tauri (App Shell), TipTap (Editor), TailwindCSS + shadcn/ui (Styling), Zustand (Client State), SQLite/SQLCipher (Database), sqlite-vec (Vector Search), FS Watch (notify crate), Ollama (LLM Local), LLM Gateway (Rust), PII Shield, Crypto, Maps (Leaflet), Graph Viz (d3). The frontend runs as a standalone Vite + React 19 web app with custom CSS variables for theming. AI integration uses the `@google/genai` SDK directly from the browser. State lives in `App.tsx` `useState`. Data is in-memory via `dataService.ts`. See FE-AD-01, FE-AD-02, FE-AD-03.
+> **Phase 0 Reality:** The following stack items are **not yet implemented**: Tauri (App Shell), TipTap (Editor), TailwindCSS + shadcn/ui (Styling), Zustand (Client State), SQLite/SQLCipher (Database), sqlite-vec (Vector Search), FS Watch (notify crate), Ollama (LLM Local), LLM Gateway (Rust), PII Shield, Crypto, Maps (Leaflet), Graph Viz (d3), whisper-rs (STT Local). The frontend runs as a standalone Vite + React 19 web app with custom CSS variables for theming. AI integration uses the `@google/genai` SDK directly from the browser. State lives in `App.tsx` `useState`. Data is in-memory via `dataService.ts`. See FE-AD-01, FE-AD-02, FE-AD-03.
 
 ### Crate Structure (Rust Backend)
 
@@ -59,7 +60,7 @@ crates/
   cortex_index/       # Indexing pipeline: frontmatter → EAV, FTS5, embeddings
   cortex_search/      # Query engine: collection_query(), FTS, vector, graph
   cortex_graph/       # Link extraction, graph edges, traversal
-  cortex_ai/          # LLM gateway, RAG pipeline, PII shield, token accounting
+  cortex_ai/          # LLM gateway, RAG pipeline, PII shield, token accounting, voice pipeline (whisper-rs STT, configurable TTS)
   cortex_crypto/      # Key derivation, API key encryption, SQLCipher config
 src-tauri/
   main.rs             # Tauri commands + events (thin layer over crates)
@@ -532,6 +533,8 @@ ai_help(question) -> HelpResponse        // Command RAG (docs)
 ai_get_providers() -> Provider[]
 ai_set_provider_key(provider, encrypted_key) -> ()
 ai_get_usage_stats(range?) -> UsageStats
+ai_transcribe(audio_b64, mime_type) -> TranscribeResult   // STT: local Whisper or cloud fallback (ADR-0013)
+ai_synthesize(text, voice_config?) -> SynthesizeResult    // TTS: configurable provider (ADR-0013)
 ```
 
 **Settings**
@@ -756,6 +759,7 @@ Before any feature development begins, validate:
 | AD-15 | Frontend AI execution (Phase 0) | Direct Gemini SDK calls from browser | Fastest iteration path; backend gateway deferred to Phase 4 | API keys exposed in browser; single-provider only |
 | AD-16 | Domain-specific types (Phase 0) | Bespoke TS interfaces per domain | 1:1 mapping with UI; clearer than generic Page in frontend | Not the unified Page model; backend must normalize |
 | AD-17 | AI multimodal (Phase 0) | Voice I/O + image gen via Gemini | Enables rich AI UX prototyping before backend exists | Not in original vision; provider-locked to Gemini |
+| AD-18 | Local STT via whisper-rs | Bundled whisper.cpp (GGML) for offline transcription | Zero-cost, offline, privacy-preserving; cloud fallback optional | Installer size increases by 74-809 MB depending on model tier. See ADR-0013 |
 
 ---
 

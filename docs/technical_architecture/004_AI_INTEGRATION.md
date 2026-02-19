@@ -86,9 +86,52 @@ pub trait LlmProvider: Send + Sync {
         texts: Vec<String>,
     ) -> Result<Vec<Vec<f32>>>;              // embedding vectors
 
+    async fn transcribe(
+        &self,
+        audio: AudioInput,
+        language: Option<String>,
+    ) -> Result<TranscribeResponse>;
+
+    async fn synthesize(
+        &self,
+        text: String,
+        voice_config: VoiceConfig,
+    ) -> Result<AudioOutput>;
+
     fn supports_streaming(&self) -> bool;
     fn supports_embeddings(&self) -> bool;
     fn supports_tool_use(&self) -> bool;
+    fn supports_transcription(&self) -> bool;
+    fn supports_synthesis(&self) -> bool;
+}
+
+// Voice I/O types (see ADR-0013)
+
+pub struct AudioInput {
+    pub data: Vec<u8>,              // raw audio bytes
+    pub mime_type: String,          // "audio/wav", "audio/pcm"
+    pub sample_rate: u32,
+    pub language_hint: Option<String>,
+}
+
+pub struct TranscribeResponse {
+    pub text: String,
+    pub detected_language: Option<String>,
+    pub duration_ms: u64,
+}
+
+pub struct VoiceConfig {
+    pub provider: String,           // "openai", "gemini", "local"
+    pub voice_id: String,           // provider-specific voice name or ID
+    pub speed: Option<f32>,         // 0.5–2.0 if supported
+    pub instructions: Option<String>, // OpenAI instructable TTS only
+}
+
+pub struct AudioOutput {
+    pub data: Vec<u8>,              // PCM or MP3 bytes
+    pub mime_type: String,
+    pub sample_rate: u32,
+    pub duration_ms: u64,
 }
 ```
 
@@ -137,12 +180,16 @@ pub struct StreamChunk {
 
 ### 2.1 Supported Providers (v1)
 
-| Provider          | Auth             | Embedding                      | Streaming | Tool Use | Notes                                   |
-| ----------------- | ---------------- | ------------------------------ | --------- | -------- | --------------------------------------- |
-| **Ollama**        | None (localhost) | Yes (nomic-embed-text, etc.)   | Yes (SSE) | Limited  | Default for privacy. No API key needed. |
-| **OpenAI**        | API key (BYOK)   | Yes (text-embedding-3-small)   | Yes (SSE) | Yes      | Most mature tool-use support            |
-| **Anthropic**     | API key (BYOK)   | No (use Ollama for embeddings) | Yes (SSE) | Yes      | Strong reasoning, Claude models         |
-| **Google Gemini** | API key (BYOK)   | Yes (text-embedding-004)       | Yes       | Yes      | Free tier available, multimodal         |
+| Provider          | Auth             | Embedding                      | Streaming | Tool Use | STT | TTS | Notes                                   |
+| ----------------- | ---------------- | ------------------------------ | --------- | -------- | --- | --- | --------------------------------------- |
+| **Ollama**        | None (localhost) | Yes (nomic-embed-text, etc.)   | Yes (SSE) | Limited  | No  | No  | Default for privacy. No API key needed. |
+| **OpenAI**        | API key (BYOK)   | Yes (text-embedding-3-small)   | Yes (SSE) | Yes      | Yes — `gpt-4o-mini-transcribe` | Yes — `gpt-4o-mini-tts` (13+ voices) | Most mature tool-use and voice support |
+| **Anthropic**     | API key (BYOK)   | No (use Ollama for embeddings) | Yes (SSE) | Yes      | No  | No  | No voice API. Use chained approach with separate STT/TTS. |
+| **Google Gemini** | API key (BYOK)   | Yes (text-embedding-004)       | Yes       | Yes      | Partial — multimodal `generateContent` | Yes — `gemini-2.5-flash-preview-tts` (5 voices) | Also supports Live Audio (native speech-to-speech) |
+| **Local Whisper** | None (bundled)   | No                             | No        | No       | Yes — whisper-rs/whisper.cpp (offline, GGML) | No | Default STT. Runs on-device. See ADR-0013. |
+| **Local TTS**     | None (bundled)   | No                             | No        | No       | No  | Future — Piper (ONNX, offline) | Phase 5+. Not yet implemented. |
+
+> **Note:** Local Whisper and Local TTS are not `LlmProvider` implementations — they are dedicated voice subsystems listed here for completeness. See ADR-0013.
 
 ### 2.2 Model Selection UI
 
@@ -171,6 +218,12 @@ Settings → AI shows:
 │  Chat: [gpt-4o          ▾]                      │
 │  Embeddings: [nomic-embed-text (Ollama) ▾]      │
 │  Quick tasks: [gpt-4o-mini  ▾]                  │
+├─────────────────────────────────────────────────┤
+│  Voice                                             │
+│  STT Provider: [Local Whisper (offline)  ▾]       │
+│  TTS Provider: [Gemini TTS              ▾]        │
+│  Voice:        [Kore                    ▾]        │
+│  Auto-speak:   [ON]                               │
 ├─────────────────────────────────────────────────┤
 │  Usage This Month                                │
 │  OpenAI:    12,450 tokens  ~$0.04               │
@@ -425,7 +478,7 @@ Files in `_inbox/` are processed by the AI:
 
 ### 5.6 Voice I/O (Phase 0 — Frontend-Direct)
 
-> **Not in original vision.** Added during Phase 0 frontend prototyping.
+> **Not in original vision.** Added during Phase 0 frontend prototyping. Target architecture defined in **Section 12** and **ADR-0013**.
 
 The frontend implements voice interaction via direct Gemini API calls:
 
@@ -436,7 +489,7 @@ The frontend implements voice interaction via direct Gemini API calls:
 - **Audio capture:** Browser MediaRecorder API for microphone input
 - **Live session:** Stub only (placeholder for Gemini Live API)
 
-See ADR-0004, FR-024.
+**Phase 4 target:** Local Whisper STT (bundled, offline) + configurable TTS provider + chained voice chat through any LLM. See Section 12 for full architecture, ADR-0013 for decision rationale, FR-024.
 
 ### 5.7 Image Generation (Phase 0 — Frontend-Direct)
 
@@ -811,3 +864,200 @@ If external service integrations grow (Google Calendar write-back, email send, A
 - Reversible (writes create revisions in diff history)
 - Bounded (max tool calls per request, token budget per session)
 - Approvable (HITL for all writes)
+
+### 11.4 Tool-Use Provider Compatibility
+
+The application-layer tool definitions are provider-agnostic. The LLM Gateway in `cortex_ai` translates a single `ToolDef` to each provider's native format:
+
+```rust
+pub struct ToolDef {
+    pub name: String,
+    pub description: String,
+    pub parameters: serde_json::Value,  // JSON Schema
+}
+```
+
+| Aspect | OpenAI | Anthropic | Gemini |
+|--------|--------|-----------|--------|
+| **API** | Responses API | Messages API | `generateContent` |
+| **Tool format** | `function` type in `tools[]` | `tools[]` parameter | `functionDeclarations` in `tools[]` |
+| **Schema enforcement** | `strict: true` — guaranteed valid JSON output | Schema validated, not strict-enforced | Schema declared, model may deviate |
+| **Tool call flow** | Response contains `tool_calls` → send `tool` role message with results | Response contains `tool_use` block → send `tool_result` block | Response contains `functionCall` → send `functionResponse` |
+| **Parallel tool calls** | Yes — multiple `tool_calls` per turn | Yes — multiple `tool_use` blocks per turn | Yes — multiple `functionCall` parts per turn |
+| **HITL integration** | Gateway intercepts write tool calls → queues to `review_queue` | Same | Same |
+| **Streaming + tools** | Yes — tool calls streamed incrementally | Yes — tool calls in streamed blocks | Yes |
+
+> **Phase 0 Divergence:** Only Gemini tool use is implemented. The 4 function declarations in `aiService.ts:14-67` are Gemini-native `FunctionDeclaration` objects. The `ToolDef` abstraction above replaces them — tool definitions are written once and the LLM Gateway translates per provider. See ADR-0013.
+
+The four Cortex agent tools (`addTask`/`create_page`, `addGoal`, `addJournalEntry`, `searchBrain`/`search_vault`) are defined once as `ToolDef` structs and translated per provider — no duplication.
+
+------
+
+## 12) Voice Pipeline Architecture
+
+> **Reference:** ADR-0013 — Voice/Audio Architecture (Bundled Whisper + Configurable TTS + Chained Voice Chat)
+
+### 12.1 Overview
+
+Voice is an **I/O layer**, not a model constraint. The voice pipeline converts speech to text (STT), sends text through the standard LLM chat path (any provider, full tool-use support), and converts the response back to speech (TTS). This decoupling means Claude, GPT, Gemini, or Ollama all work equally well with voice — the LLM never sees audio.
+
+```
+Mic → STT (local Whisper or cloud) → Text → LLM (any provider + tools) → Text → TTS (configurable) → Speaker
+```
+
+### 12.2 STT: Local Whisper (Default)
+
+**Primary:** `whisper-rs` (Rust bindings to whisper.cpp) bundled with the Tauri app. Runs entirely on-device in `cortex_ai` — zero API cost, no network required.
+
+**Distribution tiers** (one model per installer variant, build-time choice):
+
+| Tier | Model | Size | Accuracy | Use Case |
+|------|-------|------|----------|----------|
+| Lite | `whisper-tiny` / `whisper-base` | 39 / 74 MB | Adequate for clear speech | Low-storage devices |
+| Standard | `whisper-small` | 244 MB | Good balance | **Default distribution** |
+| Full | `whisper-large-v3-turbo` | 809 MB | High accuracy | Accents, technical vocab, noisy environments |
+
+**Model file location:** `resources/models/whisper/whisper-{size}.bin` (GGML format, bundled in app resources).
+
+**IPC signature:**
+
+```rust
+#[tauri::command]
+async fn ai_transcribe(
+    audio_b64: String,
+    mime_type: String,
+    state: State<'_, AppState>,
+) -> Result<TranscribeResult, AppError> {
+    // Route to local whisper or cloud provider based on AISettings.sttProvider
+}
+
+pub struct TranscribeResult {
+    pub text: String,
+    pub detected_language: Option<String>,
+    pub provider_used: String,         // "local_whisper", "openai", "gemini"
+    pub duration_ms: u64,
+}
+```
+
+**Cloud fallback** (user-selected in Settings → Voice → STT Provider, not automatic):
+
+| Priority | Provider | Model | Cost | Requires |
+|----------|----------|-------|------|----------|
+| Default | Local Whisper | whisper-{tier} | Free | Nothing (bundled) |
+| Fallback 1 | OpenAI | `gpt-4o-mini-transcribe` | $0.003/min | OpenAI API key |
+| Fallback 2 | Gemini | `generateContent` (multimodal) | Per-token | Gemini API key |
+
+### 12.3 TTS: Configurable Provider
+
+TTS provider is selectable in Settings → Voice → TTS Provider. The interface is provider-agnostic: `text in → audio bytes out`.
+
+**IPC signature:**
+
+```rust
+#[tauri::command]
+async fn ai_synthesize(
+    text: String,
+    voice_config: Option<VoiceConfig>,
+    state: State<'_, AppState>,
+) -> Result<SynthesizeResult, AppError> {
+    // Route to configured TTS provider
+}
+
+pub struct SynthesizeResult {
+    pub audio_b64: String,             // base64-encoded audio
+    pub mime_type: String,             // "audio/mp3", "audio/pcm"
+    pub duration_ms: u64,
+    pub provider_used: String,
+}
+```
+
+| Provider | Model | Voices | Features | Requires |
+|----------|-------|--------|----------|----------|
+| **Gemini TTS** | `gemini-2.5-flash-preview-tts` | 5 (Puck, Charon, Kore, Fenrir, Zephyr) | Current Phase 0 implementation | Gemini API key |
+| **OpenAI TTS** | `gpt-4o-mini-tts` | 13+ (alloy, ash, ballad, coral, echo, fable, onyx, nova, sage, shimmer, verse, marin, cedar) | Instructable voice (affect/style), high quality | OpenAI API key |
+| **Local TTS** | Piper (ONNX runtime) | Many open-source voice models | Offline, zero cost | Phase 5+ (planned, not current) |
+
+### 12.4 Chained Voice Chat Flow
+
+```mermaid
+sequenceDiagram
+    participant Mic as Browser Mic
+    participant FE as Frontend
+    participant IPC as Tauri IPC
+    participant STT as cortex_ai: STT
+    participant LLM as cortex_ai: LLM Gateway
+    participant TTS as cortex_ai: TTS
+    participant Spk as Browser Speaker
+
+    Mic->>FE: MediaRecorder → WAV (base64)
+    FE->>IPC: invoke("ai_transcribe", { audio_b64, mime_type })
+    IPC->>STT: Local Whisper (or cloud fallback)
+    STT-->>IPC: TranscribeResult { text }
+    IPC-->>FE: Transcribed text (shown in chat input)
+
+    FE->>IPC: invoke("ai_chat", { message: text, model, tools })
+    IPC->>LLM: Any provider (Claude / GPT / Gemini / Ollama) + tool use
+    Note over LLM: Tool calls execute here (addTask, searchBrain, etc.)
+    LLM-->>IPC: ChatResponse { text, tool_calls }
+    IPC-->>FE: Response text (rendered in chat)
+
+    alt Auto-speak enabled
+        FE->>IPC: invoke("ai_synthesize", { text, voice_config })
+        IPC->>TTS: Configured provider (OpenAI / Gemini / Local)
+        TTS-->>IPC: SynthesizeResult { audio_b64 }
+        IPC-->>FE: Audio bytes
+        FE->>Spk: AudioContext.play()
+    end
+```
+
+**Key property:** The LLM step is completely decoupled from voice. Any text LLM works with full tool-calling support. Voice is an I/O layer, not a model constraint.
+
+### 12.5 Native Speech-to-Speech Alternatives (Phase 5+)
+
+| Approach | Latency | Tool Use | Provider Lock-in | Status |
+|----------|---------|----------|-------------------|--------|
+| **Chained** (STT → LLM → TTS) | Higher (3 steps) | Full — any provider | None | **Phase 4 target** |
+| **OpenAI Realtime** (`gpt-realtime` via WebRTC) | Low (continuous stream) | Yes (function calling) | OpenAI only | Documented for future |
+| **Gemini Live Audio** | Low (continuous stream) | Yes | Gemini only | Documented for future |
+| **Anthropic** | N/A — no native voice API | N/A | Chained only | N/A |
+
+The chained approach is preferred for Phases 1-4 because:
+- Provider-agnostic (works with Claude, which has no voice API)
+- Full control over each pipeline step (PII shield can inspect text between STT and LLM)
+- Simpler to implement and debug
+
+### 12.6 Token Accounting for Voice
+
+The `usage_log` table gains two new feature values:
+
+| Feature | Provider | Tokens | Cost |
+|---------|----------|--------|------|
+| `"transcribe"` | `"local_whisper"` | 0 | $0.00 |
+| `"transcribe"` | `"openai"` | Estimated from audio duration | $0.003/min |
+| `"transcribe"` | `"gemini"` | Reported (multimodal tokens) | Per-token |
+| `"synthesize"` | `"openai"` | Estimated from text length | Per-char pricing |
+| `"synthesize"` | `"gemini"` | Reported | Per-token |
+| `"synthesize"` | `"local"` | 0 | $0.00 |
+
+The Section 8 Usage Dashboard breakdown adds "transcribe" and "synthesize" to the feature list alongside "chat", "rag", "summarize", "embed", and "suggest".
+
+### 12.7 Phase 0 Divergence
+
+> Expands on Section 5.6.
+
+| Aspect | Phase 0 (Current) | Phase 4 (Target) |
+|--------|-------------------|-------------------|
+| **STT** | Gemini `generateContent` in browser — not a real transcription model | `ai_transcribe` IPC → whisper-rs (local) or cloud |
+| **TTS** | Gemini TTS in browser, 5 hardcoded voices | `ai_synthesize` IPC → user-selected provider |
+| **Audio transport** | Base64 over Gemini API from frontend | Base64 over Tauri IPC to backend |
+| **API keys** | localStorage / React state | OS keychain (Section 3) |
+| **Agent tools** | Gemini function declarations only | Provider-agnostic `ToolDef` (Section 11.4) |
+| **Voice selection** | Gemini voices only | Provider-specific voice lists |
+
+**`AISettings` type changes** (Phase 4):
+```typescript
+// New fields added to AISettings in types.ts
+sttProvider: 'local_whisper' | 'openai' | 'gemini';  // default: 'local_whisper'
+ttsProvider: 'gemini' | 'openai' | 'local';           // default: 'gemini'
+// preferredVoice becomes provider-specific (Gemini voice names ≠ OpenAI voice names)
+```
