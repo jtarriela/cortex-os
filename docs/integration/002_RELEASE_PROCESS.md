@@ -15,3 +15,4 @@ This document tracks integration-level submodule pinning for Cortex OS.
 | Date (UTC) | Scope | Backend SHA | Frontend SHA | Contracts SHA | Notes |
 |------------|-------|-------------|--------------|---------------|-------|
 | 2026-02-19 | Phase 2 FR-027 hardening | `c6b17a7` | `14b0426` | `e257e5c` | Implemented real `integrations_trigger_sync` flow, fixed frontend lint errors, updated traceability + MEMORY. |
+| 2026-02-19 | FR-027 reconciliation closure | `69d6bf9` | `14b0426` | `e257e5c` | Added outbound update/delete reconciliation in `integrations_trigger_sync`, timestamp conflict handling, and orphan Cortex-event cleanup. Updated traceability + MEMORY to close the FR-027 gap. |
