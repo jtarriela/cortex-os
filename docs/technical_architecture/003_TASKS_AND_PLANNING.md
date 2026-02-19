@@ -69,7 +69,7 @@ Reference: https://docs.rs/rusqlite/latest/rusqlite/
 See also: [[SQLite concurrency research]]
 ```
 
-> **Phase 0 Divergence:** The frontend `Task` type uses a simpler field set. **Missing from frontend:** `scheduled`, `start_time`, `duration_min`, `area`, `energy`, `recurring`, `recurrence_rule`, `blocked_by`, `completed_at`. **Added in frontend (not in vision):** `taskType` (enum: Project, Task, Bug, Dev, Work), `comments` (embedded array), `boardColumnId`. The frontend also uses `TODO | DOING | DONE | ARCHIVED` (no `BLOCKED` status). See FE-AD-04.
+> **Phase 0 Divergence:** The frontend `Task` type uses a simpler field set. **Missing from frontend:** `scheduled`, `start_time`, `duration_min`, `area`, `energy`, `recurring`, `recurrence_rule`, `blocked_by`, `completed_at`. **Added in frontend (not in vision):** `taskType` (enum: Project, Task, Bug, Dev, Work), `comments` (embedded array), `boardColumnId`. The frontend also uses `TODO | DOING | DONE | ARCHIVED` (no `BLOCKED` status). See FE-AD-04. **Resolution:** See `ADR-0008` — BLOCKED is required and will be added in Phase 1.
 
 ### 1.2 Task Status Lifecycle
 
@@ -429,7 +429,7 @@ tags: [inbox]
 
 Inbox items are parsed by the AI (Phase 4, Morning Review) into structured tasks/events/notes. Until then, they're searchable plain text.
 
-> **Phase 0 Divergence:** The Today Dashboard also includes a **schedule timeline** (FR-026) with time-blocked `ScheduleItem` entries (start time + duration) managed via `dataService.ts` (`getTodaySchedule`, `addToSchedule`). This is implemented as a separate `ScheduleItem` type, not through the Calendar event system described in Section 3. Tasks can be dragged onto the timeline to be scheduled.
+> **Phase 0 Divergence:** The Today Dashboard also includes a **schedule timeline** (FR-026) with time-blocked `ScheduleItem` entries (start time + duration) managed via `dataService.ts` (`getTodaySchedule`, `addToSchedule`). This is implemented as a separate `ScheduleItem` type, not through the Calendar event system described in Section 3. Tasks can be dragged onto the timeline to be scheduled. **Resolution:** See `ADR-0007` — ScheduleItem is converged into CalendarEvent. The Today timeline will query the calendar collection filtered to today.
 
 ### 4.4 End-of-Day Reflection
 

@@ -96,7 +96,10 @@ pub trait LlmProvider: Send + Sync {
 
 ```rust
 pub struct ChatRequest {
-    pub model: String,                       // e.g., "gpt-4o", "claude-sonnet-4-20250514", "gemini-2.0-flash"
+    pub model: String,                       // e.g., "gpt-4o", "claude-sonnet-4-6-20250514", "gemini-2.0-flash"
+                                             // Note: Model IDs are managed by the backend provider config
+                                             // and frontend AVAILABLE_MODELS registry. IDs shown here are
+                                             // illustrative — check provider docs for current values.
     pub messages: Vec<Message>,
     pub system_prompt: Option<String>,
     pub temperature: f32,
@@ -158,7 +161,7 @@ Settings → AI shows:
 │    Key: ••••••••••sk-abc  [Update] [Remove]     │
 │                                                  │
 │  ☑ Anthropic               [Key saved ✓]        │
-│    Models: claude-sonnet-4-20250514, claude-haiku │
+│    Models: claude-sonnet-4-6-*, claude-haiku-4-5  │
 │    Key: ••••••••••sk-ant  [Update] [Remove]     │
 │                                                  │
 │  ☐ Google Gemini           [No key]             │
@@ -635,7 +638,8 @@ Known pricing (updated periodically in app config):
         "text-embedding-3-small": { "input_per_1k": 0.00002 }
     },
     "anthropic": {
-        "claude-sonnet-4-20250514": { "input_per_1k": 0.003, "output_per_1k": 0.015 }
+        // Model IDs are illustrative — actual IDs managed by provider config
+        "claude-sonnet-4-6-latest": { "input_per_1k": 0.003, "output_per_1k": 0.015 }
     },
     "google": {
         "gemini-2.0-flash": { "input_per_1k": 0.0001, "output_per_1k": 0.0004 }

@@ -132,6 +132,8 @@ Properties are typed key/value pairs in YAML frontmatter:
 
 ### 2.3 SQLite Schema (Index — Derived from Vault)
 
+> **Canonical schema.** Per ADR-0006, this EAV/Page schema is the production schema. The flat domain tables in `backend/docs/backend_architecture/001_SCHEMA.md` are superseded. See `docs/adrs/ADR-0006-schema-strategy.md`.
+
 ```sql
 -- Page registry
 CREATE TABLE pages (
@@ -665,16 +667,22 @@ flowchart LR
 
 ## 11) Spike Gate (Must Pass Before Feature Work)
 
+> **Detailed plan:** See `docs/adrs/ADR-0011-spike-gate-plan.md` for full acceptance criteria, execution order, and deliverables.
+
 Before any feature development begins, validate:
 
-1. **SQLCipher compiles and encrypts/decrypts** on macOS (arm64 + x86_64), Linux (x86_64), and optionally Windows (x86_64)
-2. **FTS5 extension loads** and returns ranked results
-3. **sqlite-vec extension loads** and performs cosine similarity queries
-4. **All three work together** in a single SQLCipher-encrypted database
-5. **Tauri v2 scaffold** builds and packages on all target platforms
-6. **TipTap basic integration** renders Markdown and round-trips to `.md` file
+| # | Spike | Status | Acceptance |
+|---|-------|--------|-----------|
+| 1 | **Tauri v2 scaffold** builds and packages on target platforms | NOT STARTED | Window opens, invoke() works, builds on macOS + Linux |
+| 2 | **SQLCipher compiles and encrypts/decrypts** | NOT STARTED | Create encrypted DB, close, reopen with password, read data |
+| 3 | **FTS5 extension loads** and returns ranked results | NOT STARTED | FTS5 virtual table inside SQLCipher, bm25() ranking |
+| 4 | **sqlite-vec extension loads** and performs cosine similarity queries | NOT STARTED | vec0 table inside SQLCipher, knn query returns correct results |
+| 5 | **All three work together** in a single SQLCipher-encrypted database | NOT STARTED | pages + pages_fts + vec_chunks in one encrypted DB |
+| 6 | **TipTap basic integration** renders Markdown and round-trips to `.md` file | NOT STARTED | Markdown → TipTap → Markdown round-trip preserves content |
 
-**Acceptance:** Fresh build → create vault → write note with frontmatter → full-text search returns it → vector search returns it → app packages successfully.
+**Gate criterion:** All 6 must pass before Phase 1 feature work begins. See ADR-0011.
+
+**Acceptance (combined):** Fresh build → create vault → write note with frontmatter → full-text search returns it → vector search returns it → app packages successfully.
 
 ---
 
