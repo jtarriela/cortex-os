@@ -2,9 +2,8 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
-- Phase 0.5 Spike Gate: 5 of 6 validations complete (Tauri scaffold, SQLCipher, FTS5, sqlite-vec, coexistence ✅). Remaining: TipTap Markdown round-trip (BE #2).
-- Frontend stabilization complete: BLOCKED status (ADR-0008), CalendarEvent convergence (ADR-0007), Meals CRUD extraction (FR-013), Vitest 11 smoke tests green.
-- Next action: TipTap spike (BE #2) → then PRs for all repos → Phase 0.5 gate review.
+- **Phase 0.5 COMPLETE.** All 6 ADR-0011 Spike Gate validations passed. Phase 1 is unblocked.
+- Next action: Begin Phase 1 — Alpha Foundation (cortex-os issue #2).
 
 ## System State (Facts Only)
 - Integration repo acting as workspace root.
@@ -94,4 +93,6 @@
 - 2026-02-19: Full codebase evaluation. Created development roadmap: Phase 0.5 → Phase 1 → Phase 2 → Phase 3 → Phase 4. Created 21 GitHub epic issues across all 4 repos with gates, FR mapping, ADR references. Created labels (phase:*, epic, spike, gate, tech-debt, doc-sync, paired-pr, adr) across all repos. Updated MEMORY.md with roadmap issue tracking. Key findings: backend is 0% implemented (docs only), frontend ~70% Phase 0, contracts docs complete but no artifacts.
 - 2026-02-19: Phase 0.5 Spike Gate backend (BE #1) complete. Cargo workspace created: crates/app (Tauri v2), crates/core (Page stub), crates/storage (SQLCipher+FTS5+sqlite-vec). 6 tests pass (2 unit + 4 integration). Evidence in `backend/docs/testing_strategy/001_TEST_EVIDENCE.md`. Branch: `codex/issue-1-spike-tauri-sqlcipher-fts5-vec`. devcontainer + docker-compose added to integration repo.
 - 2026-02-19: Phase 0.5 Frontend stabilization (FE #1) complete. Added BLOCKED status (ADR-0008), converged ScheduleItem→CalendarEvent (ADR-0007), extracted Meals CRUD to dataService.ts (FR-013), Vitest 3 + RTL test infra (11 smoke tests green). Branch: `codex/issue-1-phase-0.5-frontend-stabilization`.
-- 2026-02-19: Phase 0.5 Contracts baseline (Contracts #1) partial. Updated IPC wiring matrix: BLOCKED enum, deprecated schedule.* commands, added calendar.getToday + meals.update/delete + recipes.update/delete, error response convention. Created CHANGELOG.md. Branch: `codex/issue-1-phase-0.5-contracts-baseline`. TipTap spike (BE #2) still pending.
+- 2026-02-19: Phase 0.5 Contracts baseline (Contracts #1) complete. Updated IPC wiring matrix: BLOCKED enum, deprecated schedule.* commands, added calendar.getToday + meals.update/delete + recipes.update/delete, error response convention. Created CHANGELOG.md. Merged to main.
+- 2026-02-19: Phase 0.5 TipTap spike (BE #2) complete. 15 tests green: gray-matter round-trips YAML frontmatter; tiptap-markdown 0.9.0 round-trips body (headings, bold/italic, code, lists, links) in jsdom. Strip-and-reattach pattern confirmed. Packages: tiptap-markdown ✅, gray-matter ✅, @tiptap/extension-link not needed. FE PR #7 merged. TEST_EVIDENCE.md updated in backend main.
+- 2026-02-19: **Phase 0.5 COMPLETE.** All 6 ADR-0011 Spike Gate validations passed. All PRs merged. Phase 1 unblocked.
