@@ -3,6 +3,9 @@
 **Date:** 2026-02-19  
 **Epic:** [cortex-os#5](https://github.com/jtarriela/cortex-os/issues/5)
 
+> Superseded for gate closure evidence by `docs/integration/004_PHASE4_REGRESSION_MATRIX.md`.
+> This file remains as the foundation-slice snapshot that identified the remaining work prior to closure pass.
+
 ## 1) What Was Completed In This Slice
 
 ### Frontend (`cortex-os-frontend`)
