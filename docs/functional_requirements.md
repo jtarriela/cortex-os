@@ -25,6 +25,10 @@ This document defines the **functional requirements** for Cortex OS at the inte
 | **FR‑017** | **Responsive navigation:** The application shall provide a collapsible left navigation bar, a top bar, and a right drawer for secondary content and AI interactions【767791288689422†L170-L199】. |
 | **FR‑018** | **Accessibility and keyboard shortcuts:** The system shall provide keyboard shortcuts (e.g., `Ctrl/Cmd + K` for command palette, `Escape` to close modals) and accessible focus management【767791288689422†L87-L103】. |
 | **FR‑019** | **Workout tracking:** Users shall be able to view a history of workouts, log new sessions, and monitor activity trends via charts. Workouts include metadata such as date, name, duration and exercise count. |
+| **FR‑020** | **Local-First Ownership:** Users shall be able to access all data as standard Markdown files on their local filesystem, ensuring portability and offline access. |
+| **FR‑021** | **PII Shield:** The system shall detect and redact Personally Identifiable Information (PII) before sending data to cloud-based AI providers. |
+| **FR‑022** | **Morning Review (HITL):** Users shall be able to review and approve all AI-generated content (notes, tasks, links) before it is written to the vault. |
+| **FR‑023** | **Unified Search:** Users shall be able to search across all content using both keyword matching (Full-Text Search) and semantic understanding (Vector Search). |
 
 ### Notes
 
