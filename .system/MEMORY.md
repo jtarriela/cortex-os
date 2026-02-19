@@ -2,9 +2,9 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
-- Phase 0.5 Spike Gate is the immediate priority. Must pass 6 validations before Phase 1.
-- GitHub epics created across all repos with gates, task checklists, FR/ADR references.
-- Next action: Begin Spike Gate work (Tauri v2 + SQLCipher + FTS5 + sqlite-vec + TipTap).
+- Phase 0.5 Spike Gate: 5 of 6 validations complete (Tauri scaffold, SQLCipher, FTS5, sqlite-vec, coexistence ✅). Remaining: TipTap Markdown round-trip (BE #2).
+- Frontend stabilization complete: BLOCKED status (ADR-0008), CalendarEvent convergence (ADR-0007), Meals CRUD extraction (FR-013), Vitest 11 smoke tests green.
+- Next action: TipTap spike (BE #2) → then PRs for all repos → Phase 0.5 gate review.
 
 ## System State (Facts Only)
 - Integration repo acting as workspace root.
@@ -92,3 +92,6 @@
 - 2026-02-19: Created `frontend/docs/frontend_architecture/` (6 files: 000-005). Updated `docs/functional_requirements.md` (26 FRs). Updated `docs/traceability.md` (26 rows). Updated `backend/docs/backend_architecture/` (000, 001, 002). Updated `contracts/docs/technical_planning/002_IPC_WIRING_MATRIX.md`.
 - 2026-02-19: Created ADR-0001 through ADR-0005 in `docs/adrs/`. Annotated `docs/technical_architecture/` (001–004) with Phase 0 Reality divergence sections. Updated traceability with ADR cross-references.
 - 2026-02-19: Full codebase evaluation. Created development roadmap: Phase 0.5 → Phase 1 → Phase 2 → Phase 3 → Phase 4. Created 21 GitHub epic issues across all 4 repos with gates, FR mapping, ADR references. Created labels (phase:*, epic, spike, gate, tech-debt, doc-sync, paired-pr, adr) across all repos. Updated MEMORY.md with roadmap issue tracking. Key findings: backend is 0% implemented (docs only), frontend ~70% Phase 0, contracts docs complete but no artifacts.
+- 2026-02-19: Phase 0.5 Spike Gate backend (BE #1) complete. Cargo workspace created: crates/app (Tauri v2), crates/core (Page stub), crates/storage (SQLCipher+FTS5+sqlite-vec). 6 tests pass (2 unit + 4 integration). Evidence in `backend/docs/testing_strategy/001_TEST_EVIDENCE.md`. Branch: `codex/issue-1-spike-tauri-sqlcipher-fts5-vec`. devcontainer + docker-compose added to integration repo.
+- 2026-02-19: Phase 0.5 Frontend stabilization (FE #1) complete. Added BLOCKED status (ADR-0008), converged ScheduleItem→CalendarEvent (ADR-0007), extracted Meals CRUD to dataService.ts (FR-013), Vitest 3 + RTL test infra (11 smoke tests green). Branch: `codex/issue-1-phase-0.5-frontend-stabilization`.
+- 2026-02-19: Phase 0.5 Contracts baseline (Contracts #1) partial. Updated IPC wiring matrix: BLOCKED enum, deprecated schedule.* commands, added calendar.getToday + meals.update/delete + recipes.update/delete, error response convention. Created CHANGELOG.md. Branch: `codex/issue-1-phase-0.5-contracts-baseline`. TipTap spike (BE #2) still pending.
