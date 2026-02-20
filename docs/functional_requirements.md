@@ -42,6 +42,6 @@ When the frontend or backend evolves, update this file and the corresponding tra
 - FR-001 through FR-019 cover currently implemented features in the frontend (Phase 0).
 - FR-020 through FR-023 describe architectural goals; partial Phase 0 implementations exist.
 - FR-024 through FR-026 cover features implemented in Phase 0 frontend.
-- FR-027 covers Google Calendar integration planned for Phase 2 (ADR-0014).
+- FR-027 covers Google Calendar integration (ADR-0014). Core OAuth + sync flow is implemented; remaining enhancements are tracked as follow-up gaps.
 - FR-028 covers Phase 4 vault onboarding and persistence/indexing semantics (ADR-0015).
 - All FRs are sourced from the frontend implementation as the current source of truth for features. Backend and contracts must implement the IPC commands to support these requirements.
