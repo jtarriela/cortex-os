@@ -2,6 +2,7 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
+- **Calendar architecture consolidation accepted:** ADR-0018 is now ACCEPTED with execution epics `#23-#27` (adapter foundation, interaction parity, mixed editability, a11y/keyboard/responsive parity, performance/upgrade governance).
 - **Phase 3 epic completion pass implemented (issue #4): search + state + secondary module persistence/analytics delivered across FE/BE/contracts.**
 - **Phase 4 closure pass implemented (issue #5): vault onboarding, secure settings, save-commit indexing semantics, RAG commands, and frontend review/usage UX integrated.**
 - **Phase 5 AI/Voice hardening implemented:** real OpenAI/Gemini STT/TTS adapters, provider-routed voice settings (`sttProvider`/`ttsProvider`), and contracts/docs sync for ADR-0004/0005/0013 (current STT default: online `gemini`; local Whisper deferred).
@@ -41,6 +42,7 @@
 - ADR-0013: Voice/Audio architecture — local Whisper + configurable TTS (ACCEPTED)
 - ADR-0015: Vault onboarding + secure settings + incremental reindex semantics (**IMPLEMENTED** — Phase 5 verified; vault_create/select/profile, save_commit, index_queue_status, secret_set/get/delete confirmed wired)
 - ADR-0016: Meals macro-tracker extension roadmap (PROPOSED)
+- ADR-0018: DayFlow calendar integration + centralized calendar workspace (ACCEPTED)
 
 ## Roadmap — Issue Tracking
 
@@ -85,6 +87,30 @@
 | cortex-os-frontend | #5 | [Epic] AI Frontend Migration + Streaming + Approval |
 | cortex-os-contracts | #3 | [Epic] AI Command Specifications |
 
+### Phase 5.1: Calendar Platform Integration (ADR-0018)
+| Repo | Issue | Title |
+|------|-------|-------|
+| cortex-os | #23 | [Epic][ADR-0018] Calendar Workspace + DayFlow Adapter Foundation |
+| cortex-os | #24 | [Epic][ADR-0018] Interaction Parity: External Task Drop + Drag/Resize |
+| cortex-os | #25 | [Epic][ADR-0018] Mixed Editability + Google Permission Enforcement |
+| cortex-os | #26 | [Epic][ADR-0018] Accessibility, Keyboard, and Responsive Parity |
+| cortex-os | #27 | [Epic][ADR-0018] Performance Benchmarks + Upgrade Governance |
+| cortex-os-frontend | #38 | [Child][ADR-0018][E23] Calendar Workspace + DayFlow Adapter Foundation (Frontend) |
+| cortex-os-frontend | #39 | [Child][ADR-0018][E24] External Task Drop + Drag/Resize Parity (Frontend) |
+| cortex-os-frontend | #40 | [Child][ADR-0018][E25] Mixed Editability + Google Permission UX (Frontend) |
+| cortex-os-frontend | #41 | [Child][ADR-0018][E26] A11y + Keyboard + Responsive Parity (Frontend) |
+| cortex-os-frontend | #42 | [Child][ADR-0018][E27] Performance Harness + DayFlow Upgrade Guardrails (Frontend) |
+| cortex-os-backend | #29 | [Child][ADR-0018][E23] Calendar Range APIs + Workspace Support (Backend) |
+| cortex-os-backend | #30 | [Child][ADR-0018][E24] Drag/Drop Persistence Semantics + Scheduling Paths (Backend) |
+| cortex-os-backend | #31 | [Child][ADR-0018][E25] Permission Enforcement for Google-Sourced Events (Backend) |
+| cortex-os-backend | #32 | [Child][ADR-0018][E26] Calendar IPC Stability for Keyboard/A11y Flows (Backend) |
+| cortex-os-backend | #33 | [Child][ADR-0018][E27] Calendar Query/Sync Performance Baseline + Upgrade Safety (Backend) |
+| cortex-os-contracts | #13 | [Child][ADR-0018][E23] Calendar Workspace Contract Baseline + Wiring Updates (Contracts) |
+| cortex-os-contracts | #14 | [Child][ADR-0018][E24] External Drop/Drag Contract Clarifications (Contracts) |
+| cortex-os-contracts | #15 | [Child][ADR-0018][E25] Mixed Editability Error Contract + Policy Mapping (Contracts) |
+| cortex-os-contracts | #16 | [Child][ADR-0018][E26] Keyboard/A11y Interaction Contract + Drift Guard (Contracts) |
+| cortex-os-contracts | #17 | [Child][ADR-0018][E27] Versioning + Compatibility Governance for Calendar Integration (Contracts) |
+
 ## Functional Requirements
 - 28 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-028)
 - All sourced from frontend implementation
@@ -120,3 +146,13 @@
 - 2026-02-20: **Week planner/task editor/travel setup reliability pass implemented (workspace).** Frontend week view now supports drag-drop task scheduling with persisted refresh and an explicit event-detail save flow for date/time/location/description edits; task modal editing now uses local draft + explicit save to avoid per-keystroke persistence resets affecting TipTap/tags; Meals planner slot assignment now uses deterministic week-date mapping with in-context recipe creation flow; Travel new-trip flow now captures destination/date/duration/optional budget and derives itinerary days from trip metadata. Backend `travel_create_trip` now accepts optional `budget` and persists it into overview markdown + trip props. Contracts docs updated for `travel.createTrip budget?`; ADR-0016 added for future macro-tracking extension.
 - 2026-02-20: **Frontend projects-board bug sweep merged + pinned.** Frontend PR `cortex-os-frontend#37` merged at `3039b12` (issues #27/#28/#30/#31/#32/#33/#34/#35): in-app project creation modal, project-filter diagnostics, functional master-task sort/group controls, and wired Projects-board task creation actions. Integration release log and traceability were updated alongside the submodule bump.
 - 2026-02-20: **Task markdown/title persistence bug fixed and documented.** User-reported bug: TaskDetailModal edits appeared saved in-session but markdown/title did not persist to task cards after reload. Frontend fix shipped at `60daf9f`: `services/backend.ts` now sends task title via top-level `page_update_props.title` and persists markdown via `page_update_body` in the task update path; backend smoke regression coverage added. Integration docs updated (`docs/traceability.md`, `docs/integration/002_RELEASE_PROCESS.md`) and submodule pins refreshed.
+- 2026-02-20: **ADR-0018 added (calendar platform evolution).** Proposed DayFlow integration with a centralized frontend calendar workspace that serves Day/Week/Month views, including continuous month navigation/scrolling, while preserving backend-owned Google OAuth/sync and two-way Cortex event reconciliation rules. FR-015 wording and traceability calendar notes were updated to reflect scope.
+- 2026-02-20: **Integration pin sync for calendar hardening + ADR planning.** `cortex-os` now tracks backend `3680664`, frontend `a336452`, contracts `69b5609`; release log updated with calendar interaction hardening and ADR-0018 documentation sync.
+- 2026-02-20: **ADR-0018 revised after upstream DayFlow source evaluation (`/Users/jdtarriela/proj/calendar`, `aca8f8f`).** Decision changed from direct migration to gated adoption with explicit checks for month virtualization performance, delta-based adapter sync, task/event drag semantics, Google mixed-permission policy, and a11y/keyboard/mobile parity. FR linkage expanded to include FR-017/FR-018.
+- 2026-02-20: **ADR-0018 updated with DayFlow v3 boundary/plugin details.** Added explicit Preact core + React adapter content-slot boundary risks, mandatory plugin bootstrap (`@dayflow/plugin-drag`, `@dayflow/plugin-keyboard-shortcuts`), external HTML5 sidebar task-drop gate, and stronger mixed-editability requirement with upstream PR/fork path for per-event drag/resize permissions.
+- 2026-02-20: **ADR-0018 risk reconciliation added.** Document now includes a risk-mitigation register (adapter complexity, Preact/React boundary, per-event permission model, upstream churn) with verification criteria and explicit fallback decisions.
+- 2026-02-20: **ADR-0018 promoted to ACCEPTED and execution epics created.** GitHub epics opened in integration repo: `#23` (adapter foundation), `#24` (interaction parity/external drop), `#25` (mixed editability), `#26` (a11y/keyboard/responsive), `#27` (performance/upgrade governance).
+- 2026-02-20: **Traceability plan updated for ADR-0018 execution.** `docs/traceability.md` now includes FR-row linkage updates (FR-001/015/017/018/027) and an explicit ADR-0018 Delivery Traceability table mapping epics -> FRs -> evidence targets.
+- 2026-02-20: **ADR-0018 cross-repo child execution issues opened and linked.** Created 15 child issues across `cortex-os-frontend` (`#38-#42`), `cortex-os-backend` (`#29-#33`), and `cortex-os-contracts` (`#13-#17`) with detailed implementation instructions; parent epics `cortex-os#23-#27` now include child-checklist backlinks for bidirectional traceability.
+- 2026-02-20: **ADR-0018 epic #23 completed (child execution closure).** Frontend child `cortex-os-frontend#38` closed at `9a213c5` (CalendarWorkspace hook, DayFlow adapter/plugin bootstrap, Week/Today controller wiring + tests). Backend child `cortex-os-backend#29` closed at `cd91dd7` (`calendar_get_range` command, storage range query, validation + integration tests). Contracts child `cortex-os-contracts#13` closed at `75f50e2` (IPC wiring matrix update, calendar range conventions/versioning/changelog sync). Parent epic `cortex-os#23` acceptance criteria were checked and closed with evidence links.
+- 2026-02-20: **ADR-0018 E23 PR merge + integration pin sync complete.** Component PRs merged: `cortex-os-frontend#43` (`195e338`), `cortex-os-backend#34` (`9a4b77b`), `cortex-os-contracts#18` (`f28941b`). Integration repo submodules are pinned to these merged `main` SHAs; release log updated accordingly.
