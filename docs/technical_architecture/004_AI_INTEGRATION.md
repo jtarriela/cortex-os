@@ -1057,7 +1057,7 @@ The Section 8 Usage Dashboard breakdown adds "transcribe" and "synthesize" to th
 **`AISettings` type changes** (Phase 4):
 ```typescript
 // New fields added to AISettings in types.ts
-sttProvider: 'local_whisper' | 'openai' | 'gemini';  // default: 'local_whisper'
+sttProvider: 'local_whisper' | 'openai' | 'gemini';  // current default: 'gemini' (local Whisper deferred)
 ttsProvider: 'gemini' | 'openai' | 'local';           // default: 'gemini'
 // preferredVoice becomes provider-specific (Gemini voice names ≠ OpenAI voice names)
 ```

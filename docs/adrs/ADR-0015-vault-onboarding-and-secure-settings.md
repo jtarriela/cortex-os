@@ -1,6 +1,6 @@
 # ADR-0015: Vault Onboarding, Secure Settings Storage, and Incremental Reindex Semantics
 
-**Status:** ACCEPTED  
+**Status:** IMPLEMENTED
 **Date:** 2026-02-19  
 **Deciders:** Architecture review  
 **FR:** FR-028  
@@ -124,6 +124,32 @@ Test expectations:
 - save-commit indexing trigger tests (changed vs unchanged hash)
 
 ---
+
+## Implementation Notes (Phase 5 Verification — 2026-02-19, cortex-os#10)
+
+### Verified Present
+
+**Backend (`crates/app/src/lib.rs`):**
+- `vault_create` — validates path, calls `ensure_vault_structure()`, upserts profile, seeds starter "welcome" note card on first create
+- `vault_select` — validates path has `.cortex/` marker via `ensure_vault_marker()`, upserts profile
+- `vault_get_profile` — returns active `VaultProfile` or `None` (drives first-run gate)
+- `save_commit` — persists page body, calls `enqueue_index_job()` + `process_index_jobs()`, emits `page_updated` event
+- `index_queue_status` — queries `index_jobs` table; hash-dedup prevents redundant re-indexing
+- `secret_set/get/delete` — encrypted secret store using `secret_store` table (SQLCipher AES-256 + per-secret DEK wrapping)
+
+**Frontend:**
+- `App.tsx` — gates on `vaultGetProfile()` at startup; renders `<VaultSetup>` if null
+- `views/VaultSetup.tsx` — create/select flow wired to `vaultCreate` / `vaultSelect` IPC; path validation + error display
+- `stores/noteStore.ts` — dirty-state flag, 1500ms debounce autosave, `saveCommit` IPC on flush
+
+**Storage (schema V3):** `vault_profiles`, `secret_store`, `index_jobs`, `page_index_state` tables
+
+### Test Evidence
+- `frontend/tests/vault_setup.spec.tsx`: 3 tests (create vault, select vault, missing path error)
+- `frontend/tests/domain_stores.spec.ts`: noteStore vault loading + note selection
+- `backend/crates/storage/tests/ai_phase4.rs`: `vault_profiles_table_supports_active_selection`, `index_queue_tables_support_queued_and_skipped_rows`, `secret_store_table_roundtrip_rows_exist`
+
+**Issue:** cortex-os#10 (closed)
 
 ## Enforcement
 

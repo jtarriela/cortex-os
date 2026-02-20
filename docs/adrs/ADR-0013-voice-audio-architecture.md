@@ -21,6 +21,14 @@ The Phase 0 voice implementation has three architectural weaknesses:
 
 Additionally, the `LlmProvider` trait in `004_AI_INTEGRATION.md` has no voice methods, and the provider capability table has no STT/TTS columns. ADR-0004 noted that `transcribe()` and `synthesize()` need to be added but did not specify the architecture.
 
+## Phase 5 Implementation Deviation (2026-02-20)
+
+Local Whisper runtime integration is deferred. Current shipped default sets `sttProvider = gemini` (online STT) while retaining `local_whisper` as a selectable/deferred path. This deviation is temporary until the following are implemented:
+
+- Native `whisper-rs` runtime integration in backend.
+- Tiered GGML model asset lifecycle (download/load/update/select).
+- Audio preprocessing pipeline (MediaRecorder payload -> PCM16 mono/16k) with deterministic tests.
+
 ---
 
 ## Decision: STT — Bundled Whisper (Local-First)
@@ -74,7 +82,7 @@ The TTS provider is selectable in Settings. The interface is provider-agnostic: 
 | **Local TTS** | Piper (ONNX runtime) | Many open-source voice models | Offline, zero cost | Phase 5+ (planned, not current) |
 
 **Settings impact:** The `AISettings` type in `types.ts` gains:
-- `sttProvider: 'local_whisper' | 'openai' | 'gemini'` (default: `'local_whisper'`)
+- `sttProvider: 'local_whisper' | 'openai' | 'gemini'` (target default: `'local_whisper'`; **current implementation default: `'gemini'` per Phase 5 deviation**)
 - `ttsProvider: 'gemini' | 'openai' | 'local'` (default: `'gemini'`)
 - `preferredVoice` becomes provider-specific (Gemini voice names are not valid for OpenAI)
 
