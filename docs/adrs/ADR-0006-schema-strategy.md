@@ -1,6 +1,6 @@
 # ADR-0006: Schema Strategy — EAV/Page Model as Canonical Production Schema
 
-**Status:** ACCEPTED
+**Status:** IMPLEMENTED
 **Date:** 2026-02-19
 **Deciders:** Architecture review
 **FR:** All (cross-cutting)
@@ -66,3 +66,21 @@ These schemas are mutually exclusive. Schema A has no `tasks` table — tasks ar
 ## Enforcement
 
 When `cortex_storage` is implemented, any PR that introduces a domain-specific SQL table (e.g., `CREATE TABLE tasks`) must be rejected with a reference to this ADR. The only permitted table additions are those in the EAV schema or justified system tables (e.g., `app_config`, `project_templates`).
+
+The `no_flat_domain_tables_exist` test in `backend/crates/storage/src/schema.rs` acts as a CI-enforced guard: it asserts that none of the 19 known flat domain table names exist after running all migrations.
+
+## Implementation Notes (Phase 5 Verification — 2026-02-19)
+
+**Pragmatic deviation from design doc:** ADR-0006 and `001_architecture.md` Section 2.3 describe a separate `page_props` table for the EAV attribute store. The actual implementation uses an inline `props TEXT NOT NULL DEFAULT '{}'` JSON column on the `pages` table instead. This achieves the same EAV goals (typed key/value storage without domain-specific columns) with lower query complexity and no JOIN overhead for the common single-entity read path.
+
+**Verified schema (Phase 5 gap audit):**
+- `pages` — universal entity store with `kind` discriminator and `props` JSON blob
+- `pages_fts` — FTS5 virtual table (auto-maintained via triggers)
+- `settings` — key/value app config
+- `review_queue`, `usage_log` — AI HITL and cost accounting (system tables, Phase 4)
+- `vault_profiles`, `secret_store`, `index_jobs`, `page_index_state` — vault/indexing (system tables, Phase 4)
+- `search_chunks`, `graph_edges`, `search_chunk_vec` — search/graph auxiliary tables (EAV-adjacent, Phase 3)
+
+**No flat domain tables exist.** Verified by audit of all `.rs` files in `backend/crates/` and enforced by the `no_flat_domain_tables_exist` schema test.
+
+**Issue:** cortex-os#11 (closed)
