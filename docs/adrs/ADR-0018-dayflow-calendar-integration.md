@@ -15,6 +15,7 @@ The DayFlow upstream repository was cloned locally and evaluated from source (`/
 3. **Drag-and-drop is plugin-based** (`@dayflow/plugin-drag`) and emits event mutations, not a rich external drop-intent contract by default.
 4. **Read-only controls are app-level** (`readOnly`, `ReadOnlyConfig`), not first-class per-event permissions.
 5. **Google integration is not built into DayFlow**; Cortex backend/frontend remains system-of-record for OAuth/sync/reconciliation.
+6. **v3 rendering boundary changed**: `@dayflow/core` runs on Preact and the React adapter bridges custom UI via content-slot portals. Cortex React context/state assumptions must be explicit at this boundary.
 
 Existing Cortex Google sync implementation already provides:
 
@@ -38,11 +39,22 @@ Create one calendar domain/controller area in frontend (workspace-level state + 
 
 Views remain thin and consume hooks/controllers (ADR-0017), not direct service calls.
 
+### 1.1) Preact Boundary + Context Bridging
+
+DayFlow is mounted through a React adapter over a Preact core renderer. Therefore:
+
+- custom event/detail/header/sidebar UI must go through DayFlow content slots
+- any Cortex context-dependent behavior (theme, feature flags, permissions, telemetry hooks) must be explicitly bridged through adapter slot props or controlled callbacks
+- do not assume Cortex providers automatically flow into all DayFlow-rendered internals
+
 ### 2) Adapter + State Ownership Strategy
 
 Cortex remains canonical for events/tasks/sync policy. DayFlow is rendering + interaction infrastructure.
 
 - Maintain a stable DayFlow app instance per workspace.
+- Explicitly install/register required plugins during adapter bootstrap:
+  - `@dayflow/plugin-drag` (FR-001/FR-015 interaction parity)
+  - `@dayflow/plugin-keyboard-shortcuts` (FR-018 parity)
 - Sync event changes via delta operations (`add/update/delete`), not full app recreation.
 - Use an adapter boundary for:
   - `CalendarEvent` <-> DayFlow event mapping
@@ -63,8 +75,9 @@ Before full migration, we must prove that task and event interactions remain una
 - task drop into timed slot
 - task drop/create in all-day context
 - existing event move/resize in week and month views
+- external task drag from Cortex sidebar into calendar surface (HTML5 `dataTransfer`)
 
-If required drop-intent precision is unavailable from current callbacks, integration must add an extension layer (or upstream contribution) before rollout.
+DayFlow drag plugin is internal-pointer optimized; Cortex external drop must be implemented in a wrapper layer (`onDragOver`/`onDrop`) that maps drop coordinates to date/time intent. Integration should use DayFlow-exposed drag/date geometry utilities where possible, with fallback to explicit grid geometry mapping owned by Cortex adapter.
 
 ### 5) Google Sync + Editability Policy (No Regression)
 
@@ -78,6 +91,8 @@ Policy for this ADR:
 
 Because DayFlow read-only is currently app-level, mixed editability (some events editable, some not) requires adapter/plugin enforcement and explicit tests.
 
+For production rollout, UI snap-back on forbidden edits is not an acceptable steady-state UX. Preferred path is upstream enhancement (or fork if required) to add per-event drag/resize guards.
+
 ### 6) Accessibility and Responsive Constraints
 
 DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), so keyboard support and a11y compliance are integration responsibilities.
@@ -89,15 +104,16 @@ DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), 
 
 - Start upstream, pin to an explicit version range, and upgrade deliberately.
 - Keep DayFlow isolated behind adapter + tests so Cortex can update alongside upstream safely.
-- Fork only if blocking defects/features (for Cortex requirements) are not solved upstream in acceptable time.
+- For per-event mixed editability, attempt upstream contribution first; fork is acceptable if blocking requirements are not delivered in time.
 
 ## Integration Gates (Required Before ACCEPTED)
 
 1. **Performance Gate**: month continuous scroll benchmark passes target FPS/memory/no-freeze thresholds on representative data.
 2. **State Sync Gate**: adapter proves O(changed-items) updates without full calendar remount/reset on single-event edits.
-3. **Drag Semantics Gate**: prototype confirms task vs event intent disambiguation (timed vs all-day) and correct persistence.
+3. **External Drop Gate**: prototype demonstrates sidebar task HTML5 drag/drop into week and month surfaces with correct timed/all-day intent mapping and persistence.
 4. **Google Policy Gate**: product/design sign-off for inbound Google read-only behavior (or explicit approved exception scope).
-5. **A11y/Mobile Gate**: keyboard navigation + focus + responsive audit passes defined checklist.
+5. **Mixed Editability Gate**: implementation proves per-event edit guards (Google inbound locked, Cortex-managed editable) without relying on post-drop snap-back; upstream PR/fork plan must be explicit if needed.
+6. **A11y/Mobile Gate**: keyboard navigation + focus + responsive audit passes checklist, with `@dayflow/plugin-keyboard-shortcuts` enabled and tested.
 
 ## FR Coverage
 
@@ -114,12 +130,13 @@ DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), 
 ## Implementation Shape (Planned)
 
 1. Build `CalendarWorkspace` hook/controller as the single frontend calendar state boundary.
-2. Implement DayFlow adapter with event/permission mapping and delta sync.
-3. Run spike prototype for week view + task/event drag semantics.
-4. Add month virtual-scroll validation harness with realistic event density.
-5. Add permission guards for mixed editability behavior (Google inbound vs Cortex-managed).
-6. Run a11y/mobile audit and keyboard parity tests.
-7. Migrate views incrementally: Week -> Day -> Month (same workspace/state source).
+2. Implement DayFlow adapter with plugin bootstrap (`drag`, `keyboard`), event/permission mapping, and delta sync.
+3. Add content-slot/context bridge strategy for Cortex-specific UI and provider-dependent behavior.
+4. Run spike prototype for week view with internal drag + external sidebar task drop.
+5. Add month virtual-scroll validation harness with realistic event density.
+6. Deliver mixed editability enforcement path (upstream PR or fork) for per-event drag/resize permissions.
+7. Run a11y/mobile audit and keyboard parity tests.
+8. Migrate views incrementally: Week -> Day -> Month (same workspace/state source).
 
 ## Consequences
 
@@ -132,7 +149,8 @@ DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), 
 ### Risks
 
 - Adapter complexity can become a bottleneck without strict diff-sync discipline.
-- Per-event permission behavior may need extension work due global read-only model.
+- Preact/React boundary can hide context assumptions unless explicitly bridged through slots/adapters.
+- Per-event permission behavior likely needs upstream drag-plugin extension or a maintained fork.
 - Upstream API/plugin changes can impact integration timing.
 
 ## Paired-PR / Contracts Impact
