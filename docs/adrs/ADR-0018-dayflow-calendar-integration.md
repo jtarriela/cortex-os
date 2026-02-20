@@ -134,6 +134,16 @@ This ADR is executed through the following epics in `cortex-os`:
 4. [#26](https://github.com/jtarriela/cortex-os/issues/26) Accessibility, Keyboard, and Responsive Parity
 5. [#27](https://github.com/jtarriela/cortex-os/issues/27) Performance Benchmarks + Upgrade Governance
 
+### Cross-Repo Child Execution Issues
+
+| Epic | Frontend | Backend | Contracts |
+|------|----------|---------|-----------|
+| [#23](https://github.com/jtarriela/cortex-os/issues/23) | [frontend#38](https://github.com/jtarriela/cortex-os-frontend/issues/38) | [backend#29](https://github.com/jtarriela/cortex-os-backend/issues/29) | [contracts#13](https://github.com/jtarriela/cortex-os-contracts/issues/13) |
+| [#24](https://github.com/jtarriela/cortex-os/issues/24) | [frontend#39](https://github.com/jtarriela/cortex-os-frontend/issues/39) | [backend#30](https://github.com/jtarriela/cortex-os-backend/issues/30) | [contracts#14](https://github.com/jtarriela/cortex-os-contracts/issues/14) |
+| [#25](https://github.com/jtarriela/cortex-os/issues/25) | [frontend#40](https://github.com/jtarriela/cortex-os-frontend/issues/40) | [backend#31](https://github.com/jtarriela/cortex-os-backend/issues/31) | [contracts#15](https://github.com/jtarriela/cortex-os-contracts/issues/15) |
+| [#26](https://github.com/jtarriela/cortex-os/issues/26) | [frontend#41](https://github.com/jtarriela/cortex-os-frontend/issues/41) | [backend#32](https://github.com/jtarriela/cortex-os-backend/issues/32) | [contracts#16](https://github.com/jtarriela/cortex-os-contracts/issues/16) |
+| [#27](https://github.com/jtarriela/cortex-os/issues/27) | [frontend#42](https://github.com/jtarriela/cortex-os-frontend/issues/42) | [backend#33](https://github.com/jtarriela/cortex-os-backend/issues/33) | [contracts#17](https://github.com/jtarriela/cortex-os-contracts/issues/17) |
+
 ## FR Coverage
 
 | FR | Requirement Linkage | DayFlow Integration Impact |

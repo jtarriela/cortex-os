@@ -55,13 +55,13 @@ This document maps each functional requirement (FR) defined in `functional_requi
 
 ## ADR-0018 Delivery Traceability (Planned)
 
-| Epic (cortex-os) | Scope | FRs | Repo Delivery Surface | Evidence Target |
-|------|------|------|------|------|
-| [#23](https://github.com/jtarriela/cortex-os/issues/23) | CalendarWorkspace + DayFlow adapter foundation | FR-015, FR-026, FR-018 | FE adapter/workspace layer, plugin bootstrap, ADR/docs sync | adapter contract tests + controller hook tests |
-| [#24](https://github.com/jtarriela/cortex-os/issues/24) | External task drop + drag/resize parity | FR-001, FR-015, FR-026 | FE calendar wrapper + drag/drop intent mapping | drag/drop integration tests (week/month + all-day/timed) |
-| [#25](https://github.com/jtarriela/cortex-os/issues/25) | Mixed editability + Google permission enforcement | FR-027, FR-015, FR-001 | FE permission guards + upstream/fork decision record | no-snapback permission tests + policy sign-off |
-| [#26](https://github.com/jtarriela/cortex-os/issues/26) | Accessibility/keyboard/responsive parity | FR-017, FR-018, FR-015 | FE keyboard/a11y wrapper + responsive shell checks | keyboard/a11y regression suite + responsive QA checklist |
-| [#27](https://github.com/jtarriela/cortex-os/issues/27) | Performance benchmark + upgrade governance | FR-015, FR-026 | FE benchmark harness + version governance docs | performance gate report + upgrade compatibility CI |
+| Epic (cortex-os) | Scope | FRs | Frontend Child | Backend Child | Contracts Child | Evidence Target |
+|------|------|------|------|------|------|------|
+| [#23](https://github.com/jtarriela/cortex-os/issues/23) | CalendarWorkspace + DayFlow adapter foundation | FR-015, FR-026, FR-018 | [frontend#38](https://github.com/jtarriela/cortex-os-frontend/issues/38) | [backend#29](https://github.com/jtarriela/cortex-os-backend/issues/29) | [contracts#13](https://github.com/jtarriela/cortex-os-contracts/issues/13) | adapter contract tests + controller hook tests |
+| [#24](https://github.com/jtarriela/cortex-os/issues/24) | External task drop + drag/resize parity | FR-001, FR-015, FR-026 | [frontend#39](https://github.com/jtarriela/cortex-os-frontend/issues/39) | [backend#30](https://github.com/jtarriela/cortex-os-backend/issues/30) | [contracts#14](https://github.com/jtarriela/cortex-os-contracts/issues/14) | drag/drop integration tests (week/month + all-day/timed) |
+| [#25](https://github.com/jtarriela/cortex-os/issues/25) | Mixed editability + Google permission enforcement | FR-027, FR-015, FR-001 | [frontend#40](https://github.com/jtarriela/cortex-os-frontend/issues/40) | [backend#31](https://github.com/jtarriela/cortex-os-backend/issues/31) | [contracts#15](https://github.com/jtarriela/cortex-os-contracts/issues/15) | no-snapback permission tests + policy sign-off |
+| [#26](https://github.com/jtarriela/cortex-os/issues/26) | Accessibility/keyboard/responsive parity | FR-017, FR-018, FR-015 | [frontend#41](https://github.com/jtarriela/cortex-os-frontend/issues/41) | [backend#32](https://github.com/jtarriela/cortex-os-backend/issues/32) | [contracts#16](https://github.com/jtarriela/cortex-os-contracts/issues/16) | keyboard/a11y regression suite + responsive QA checklist |
+| [#27](https://github.com/jtarriela/cortex-os/issues/27) | Performance benchmark + upgrade governance | FR-015, FR-026 | [frontend#42](https://github.com/jtarriela/cortex-os-frontend/issues/42) | [backend#33](https://github.com/jtarriela/cortex-os-backend/issues/33) | [contracts#17](https://github.com/jtarriela/cortex-os-contracts/issues/17) | performance gate report + upgrade compatibility CI |
 
 ## Known Gaps
 

@@ -95,6 +95,21 @@
 | cortex-os | #25 | [Epic][ADR-0018] Mixed Editability + Google Permission Enforcement |
 | cortex-os | #26 | [Epic][ADR-0018] Accessibility, Keyboard, and Responsive Parity |
 | cortex-os | #27 | [Epic][ADR-0018] Performance Benchmarks + Upgrade Governance |
+| cortex-os-frontend | #38 | [Child][ADR-0018][E23] Calendar Workspace + DayFlow Adapter Foundation (Frontend) |
+| cortex-os-frontend | #39 | [Child][ADR-0018][E24] External Task Drop + Drag/Resize Parity (Frontend) |
+| cortex-os-frontend | #40 | [Child][ADR-0018][E25] Mixed Editability + Google Permission UX (Frontend) |
+| cortex-os-frontend | #41 | [Child][ADR-0018][E26] A11y + Keyboard + Responsive Parity (Frontend) |
+| cortex-os-frontend | #42 | [Child][ADR-0018][E27] Performance Harness + DayFlow Upgrade Guardrails (Frontend) |
+| cortex-os-backend | #29 | [Child][ADR-0018][E23] Calendar Range APIs + Workspace Support (Backend) |
+| cortex-os-backend | #30 | [Child][ADR-0018][E24] Drag/Drop Persistence Semantics + Scheduling Paths (Backend) |
+| cortex-os-backend | #31 | [Child][ADR-0018][E25] Permission Enforcement for Google-Sourced Events (Backend) |
+| cortex-os-backend | #32 | [Child][ADR-0018][E26] Calendar IPC Stability for Keyboard/A11y Flows (Backend) |
+| cortex-os-backend | #33 | [Child][ADR-0018][E27] Calendar Query/Sync Performance Baseline + Upgrade Safety (Backend) |
+| cortex-os-contracts | #13 | [Child][ADR-0018][E23] Calendar Workspace Contract Baseline + Wiring Updates (Contracts) |
+| cortex-os-contracts | #14 | [Child][ADR-0018][E24] External Drop/Drag Contract Clarifications (Contracts) |
+| cortex-os-contracts | #15 | [Child][ADR-0018][E25] Mixed Editability Error Contract + Policy Mapping (Contracts) |
+| cortex-os-contracts | #16 | [Child][ADR-0018][E26] Keyboard/A11y Interaction Contract + Drift Guard (Contracts) |
+| cortex-os-contracts | #17 | [Child][ADR-0018][E27] Versioning + Compatibility Governance for Calendar Integration (Contracts) |
 
 ## Functional Requirements
 - 28 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-028)
@@ -138,3 +153,4 @@
 - 2026-02-20: **ADR-0018 risk reconciliation added.** Document now includes a risk-mitigation register (adapter complexity, Preact/React boundary, per-event permission model, upstream churn) with verification criteria and explicit fallback decisions.
 - 2026-02-20: **ADR-0018 promoted to ACCEPTED and execution epics created.** GitHub epics opened in integration repo: `#23` (adapter foundation), `#24` (interaction parity/external drop), `#25` (mixed editability), `#26` (a11y/keyboard/responsive), `#27` (performance/upgrade governance).
 - 2026-02-20: **Traceability plan updated for ADR-0018 execution.** `docs/traceability.md` now includes FR-row linkage updates (FR-001/015/017/018/027) and an explicit ADR-0018 Delivery Traceability table mapping epics -> FRs -> evidence targets.
+- 2026-02-20: **ADR-0018 cross-repo child execution issues opened and linked.** Created 15 child issues across `cortex-os-frontend` (`#38-#42`), `cortex-os-backend` (`#29-#33`), and `cortex-os-contracts` (`#13-#17`) with detailed implementation instructions; parent epics `cortex-os#23-#27` now include child-checklist backlinks for bidirectional traceability.
