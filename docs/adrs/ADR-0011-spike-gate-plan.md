@@ -1,6 +1,6 @@
 # ADR-0011: Spike Gate Validation Plan
 
-**Status:** ACCEPTED
+**Status:** IMPLEMENTED
 **Date:** 2026-02-19
 **Deciders:** Architecture review
 **FR:** All (prerequisite)
@@ -113,12 +113,12 @@ Spikes 2-4 can potentially be parallelized if multiple developers are available.
 
 | Spike | Status | Date Completed | Notes |
 |-------|--------|---------------|-------|
-| 1. Tauri v2 scaffold | NOT STARTED | | |
-| 2. SQLCipher integration | NOT STARTED | | |
-| 3. FTS5 extension | NOT STARTED | | |
-| 4. sqlite-vec extension | NOT STARTED | | |
-| 5. Combined validation | NOT STARTED | | |
-| 6. TipTap integration | NOT STARTED | | |
+| 1. Tauri v2 scaffold | PASSED | 2026-02-19 | `cortex-os-backend#1` closed; `backend/crates/app/src/main.rs` scaffold + Tauri v2 window. Evidence: `.system/MEMORY.md` Phase 0.5 entry. |
+| 2. SQLCipher integration | PASSED | 2026-02-19 | `backend/crates/storage/tests/spike_coexistence.rs::test_sqlcipher_encrypt_decrypt` green. |
+| 3. FTS5 extension | PASSED | 2026-02-19 | `backend/crates/storage/tests/spike_coexistence.rs::test_fts5_in_encrypted_db` green. |
+| 4. sqlite-vec extension | PASSED | 2026-02-19 | `backend/crates/storage/tests/spike_coexistence.rs::test_sqlite_vec_in_encrypted_db` green. |
+| 5. Combined validation | PASSED | 2026-02-19 | `backend/crates/storage/tests/spike_coexistence.rs::test_sqlcipher_fts5_vec_coexistence` green. All three coexist in one encrypted DB. |
+| 6. TipTap integration | PASSED | 2026-02-19 | `cortex-os-backend#2` / `cortex-os-frontend#7` merged; `frontend/tests/tiptap.spike.test.ts` (15 tests) green. Frontmatter round-trip confirmed via `gray-matter` + `tiptap-markdown`. | |
 
 ## Consequences
 
