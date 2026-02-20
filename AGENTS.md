@@ -79,6 +79,13 @@ After merges, bump submodule SHAs in `cortex-os` and record in:
 * `docs/integration/002_RELEASE_PROCESS.md`
 * `.system/MEMORY.md`
 
+### 3. Frontend Hooks Governance (ADR-0017)
+When work touches `frontend/`:
+* New or modified views MUST have companion `hooks/use*.ts` controllers.
+* Views must not import from `services/` directly.
+* Views must not contain data-fetching `useEffect` logic.
+* Hooks must have tests in `tests/hooks/`.
+
 ---
 
 ## Before You Start

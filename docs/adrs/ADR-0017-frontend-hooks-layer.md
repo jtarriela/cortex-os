@@ -1,6 +1,6 @@
 # ADR-0017: Frontend Hooks Layer — Controller Pattern for View Logic Extraction
 
-**Status:** PROPOSED
+**Status:** IMPLEMENTED
 **Date:** 2026-02-20
 **Deciders:** Architecture review
 **FR:** Frontend (cross-cutting)
