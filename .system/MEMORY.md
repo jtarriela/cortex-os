@@ -2,7 +2,7 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
-- **Calendar architecture consolidation planned:** ADR-0018 proposes a centralized Day/Week/Month calendar workspace with DayFlow as the rendering engine and existing Google sync semantics preserved.
+- **Calendar architecture consolidation planned:** ADR-0018 now defines a gated DayFlow integration (performance, state-sync, drag semantics, Google policy, a11y/mobile) with a centralized Day/Week/Month calendar workspace and Cortex-owned Google sync.
 - **Phase 3 epic completion pass implemented (issue #4): search + state + secondary module persistence/analytics delivered across FE/BE/contracts.**
 - **Phase 4 closure pass implemented (issue #5): vault onboarding, secure settings, save-commit indexing semantics, RAG commands, and frontend review/usage UX integrated.**
 - **Phase 5 AI/Voice hardening implemented:** real OpenAI/Gemini STT/TTS adapters, provider-routed voice settings (`sttProvider`/`ttsProvider`), and contracts/docs sync for ADR-0004/0005/0013 (current STT default: online `gemini`; local Whisper deferred).
@@ -124,3 +124,4 @@
 - 2026-02-20: **Task markdown/title persistence bug fixed and documented.** User-reported bug: TaskDetailModal edits appeared saved in-session but markdown/title did not persist to task cards after reload. Frontend fix shipped at `60daf9f`: `services/backend.ts` now sends task title via top-level `page_update_props.title` and persists markdown via `page_update_body` in the task update path; backend smoke regression coverage added. Integration docs updated (`docs/traceability.md`, `docs/integration/002_RELEASE_PROCESS.md`) and submodule pins refreshed.
 - 2026-02-20: **ADR-0018 added (calendar platform evolution).** Proposed DayFlow integration with a centralized frontend calendar workspace that serves Day/Week/Month views, including continuous month navigation/scrolling, while preserving backend-owned Google OAuth/sync and two-way Cortex event reconciliation rules. FR-015 wording and traceability calendar notes were updated to reflect scope.
 - 2026-02-20: **Integration pin sync for calendar hardening + ADR planning.** `cortex-os` now tracks backend `3680664`, frontend `a336452`, contracts `69b5609`; release log updated with calendar interaction hardening and ADR-0018 documentation sync.
+- 2026-02-20: **ADR-0018 revised after upstream DayFlow source evaluation (`/Users/jdtarriela/proj/calendar`, `aca8f8f`).** Decision changed from direct migration to gated adoption with explicit checks for month virtualization performance, delta-based adapter sync, task/event drag semantics, Google mixed-permission policy, and a11y/keyboard/mobile parity. FR linkage expanded to include FR-017/FR-018.

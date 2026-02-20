@@ -2,109 +2,139 @@
 
 ## Status
 
-PROPOSED (2026-02-20)
+PROPOSED (revised 2026-02-20)
 
 ## Context
 
 Cortex currently renders calendar UX with custom React/Tailwind week/month grids and a separate Today timeline. The behavior is feature-rich (drag/drop, resize, event detail edits, Google source badges), but the rendering layer is bespoke and duplicated across views.
 
-This creates three integration pressures:
+The DayFlow upstream repository was cloned locally and evaluated from source (`/Users/jdtarriela/proj/calendar`, commit `aca8f8f`). This changed the ADR in five important ways:
 
-1. We need a stronger shared calendar surface for Day, Week, and Month.
-2. We need Month view to support continuous month navigation/scrolling.
-3. We need to preserve Google two-way sync semantics already implemented in backend integration commands.
+1. **Month scrolling/virtualization is present upstream** (`useVirtualMonthScroll`, buffered visible window, dynamic week loading).
+2. **DayFlow is not a pure controlled-events component by default**: `useCalendarApp` keeps a persistent `CalendarApp` instance; `updateConfig()` does not reconcile `events`.
+3. **Drag-and-drop is plugin-based** (`@dayflow/plugin-drag`) and emits event mutations, not a rich external drop-intent contract by default.
+4. **Read-only controls are app-level** (`readOnly`, `ReadOnlyConfig`), not first-class per-event permissions.
+5. **Google integration is not built into DayFlow**; Cortex backend/frontend remains system-of-record for OAuth/sync/reconciliation.
 
-Relevant FRs: FR-004, FR-015, FR-026, FR-027 (plus task scheduling overlap with FR-001).
+Existing Cortex Google sync implementation already provides:
+
+- OAuth + discovery + sync commands: `integrations_google_auth`, `integrations_google_calendars`, `integrations_trigger_sync`
+- inbound Google event ingestion and reconciliation
+- outbound Cortex calendar create/update/delete with `cortex_page_id` mapping and conflict handling
+
+Relevant FRs: FR-001, FR-004, FR-015, FR-017, FR-018, FR-026, FR-027.
 
 ## Decision
 
-We will integrate `dayflow-js/calendar` as the **calendar UI engine** while keeping Cortex as the source of truth for data, sync rules, and permissions.
+We will keep the DayFlow adoption direction, but **change from direct migration to a gated integration strategy** centered on a single frontend calendar workspace.
 
-### 1) Centralized Calendar Workspace (Frontend Architecture)
+### 1) Frontend Architecture: Centralized Calendar Workspace
 
-Create a centralized calendar module in frontend (single owner for calendar state + mapping + rules), then compose views from it:
+Create one calendar domain/controller area in frontend (workspace-level state + adapter + permission policy), and have Day/Week/Month views render from it.
 
-- `Day` view surface (Today-focused schedule rendering)
-- `Week` planner surface
-- `Month` surface inside the calendar workspace, with continuous month navigation/scrolling
+- Day view (Today timeline)
+- Week planner
+- Month view with continuous scroll/navigation in the same workspace
 
-Views should consume this workspace/controller, not implement independent calendar logic.
+Views remain thin and consume hooks/controllers (ADR-0017), not direct service calls.
 
-### 2) Data Ownership + Adapter Boundary
+### 2) Adapter + State Ownership Strategy
 
-DayFlow will be treated as a rendering/interaction dependency only.
+Cortex remains canonical for events/tasks/sync policy. DayFlow is rendering + interaction infrastructure.
 
-- Canonical model remains Cortex `CalendarEvent` + backend page props.
-- Use an adapter layer to map `CalendarEvent` <-> DayFlow event shape.
-- DayFlow callbacks (`drop`, `resize`, `create`, `delete`, `click`) call existing Cortex services/hooks.
+- Maintain a stable DayFlow app instance per workspace.
+- Sync event changes via delta operations (`add/update/delete`), not full app recreation.
+- Use an adapter boundary for:
+  - `CalendarEvent` <-> DayFlow event mapping
+  - permission mapping (`source`, `sync_external`, `read_only`)
+  - callback translation (`create/move/resize/delete`) into Cortex update paths
 
-This isolates vendor-specific APIs and allows replacement without rewriting domain logic.
+### 3) Month View Performance Requirement
 
-### 3) Google Calendar Behavior (No Regression)
+DayFlow’s virtual month scrolling can satisfy FR-015 only if Cortex datasets remain performant under realistic load.
 
-DayFlow does not provide built-in Google OAuth/sync orchestration. Google integration remains owned by Cortex backend/frontend integration flows.
+- Validate continuous month scrolling with dense data before rollout.
+- Treat virtualization as a prerequisite pass/fail gate, not an assumption.
 
-Existing behavior to preserve:
+### 4) Task/Event Drag Semantics Gate
 
-- OAuth + calendar discovery + manual sync trigger via `integrations_google_auth`, `integrations_google_calendars`, `integrations_trigger_sync`.
-- Inbound external events are rendered as Google-sourced entries.
-- Outbound Cortex-managed events continue two-way reconciliation through backend sync logic.
+Before full migration, we must prove that task and event interactions remain unambiguous:
 
-Two-way edits policy in calendar UI:
+- task drop into timed slot
+- task drop/create in all-day context
+- existing event move/resize in week and month views
 
-- `source = google` and non-Cortex-managed events: read-only in UI.
-- Cortex-managed events (`source = cortex` and/or sync-managed flags): editable and syncable.
-- UI permission flags must be derived from backend-owned metadata, not guessed in the view.
+If required drop-intent precision is unavailable from current callbacks, integration must add an extension layer (or upstream contribution) before rollout.
 
-### 4) Month View Requirement
+### 5) Google Sync + Editability Policy (No Regression)
 
-Month view will support:
+DayFlow does not implement Google OAuth/sync. Cortex keeps ownership of all Google flows and two-way sync behavior.
 
-- week/month toggle in the calendar workspace
-- continuous month navigation/scrolling (not single static month only)
-- day-cell drill-down to day/week context
+Policy for this ADR:
 
-### 5) Dependency/Fork Strategy
+- inbound Google external events remain read-only in Cortex UI (FR-027 baseline)
+- Cortex-managed events remain editable and two-way synced
+- permission decisions come from backend metadata, not UI inference
 
-- Start with upstream DayFlow package (no fork initially).
-- Pin to an explicit minor version range; upgrade intentionally after validation.
-- Use adapter boundary + integration tests to keep upgrade risk low.
-- Fork only if blocked by critical defects/features and upstream turnaround is not viable.
+Because DayFlow read-only is currently app-level, mixed editability (some events editable, some not) requires adapter/plugin enforcement and explicit tests.
+
+### 6) Accessibility and Responsive Constraints
+
+DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), so keyboard support and a11y compliance are integration responsibilities.
+
+- a11y and responsive audits are mandatory before week-view replacement
+- keyboard plugin activation and verification are required for FR-018 parity
+
+### 7) Dependency and Fork Strategy
+
+- Start upstream, pin to an explicit version range, and upgrade deliberately.
+- Keep DayFlow isolated behind adapter + tests so Cortex can update alongside upstream safely.
+- Fork only if blocking defects/features (for Cortex requirements) are not solved upstream in acceptable time.
+
+## Integration Gates (Required Before ACCEPTED)
+
+1. **Performance Gate**: month continuous scroll benchmark passes target FPS/memory/no-freeze thresholds on representative data.
+2. **State Sync Gate**: adapter proves O(changed-items) updates without full calendar remount/reset on single-event edits.
+3. **Drag Semantics Gate**: prototype confirms task vs event intent disambiguation (timed vs all-day) and correct persistence.
+4. **Google Policy Gate**: product/design sign-off for inbound Google read-only behavior (or explicit approved exception scope).
+5. **A11y/Mobile Gate**: keyboard navigation + focus + responsive audit passes defined checklist.
 
 ## FR Coverage
 
-| FR | Requirement Linkage | DayFlow Impact |
-|----|---------------------|----------------|
-| FR-004 | Today dashboard includes today schedule | Day view rendering sourced from centralized calendar workspace |
-| FR-015 | Calendar workspace supports day/week/month with drag/update/delete | DayFlow becomes rendering/interaction engine; Cortex remains business logic owner |
-| FR-026 | Today schedule timeline of tasks/events | Same event source, now rendered through shared calendar layer |
-| FR-027 | Google calendar sync, read-only inbound, outbound Cortex sync | Preserved via existing backend integration; DayFlow only visualizes and dispatches actions |
-| FR-001 | Scheduled task edits from calendar | Task-backed event edits continue through existing task update paths |
+| FR | Requirement Linkage | DayFlow Integration Impact |
+|----|---------------------|----------------------------|
+| FR-001 | Task management / scheduling edits | Task-backed calendar actions must keep existing task update semantics |
+| FR-004 | Today dashboard schedule | Day timeline draws from centralized calendar workspace |
+| FR-015 | Day/Week/Month calendar + continuous month scroll | DayFlow used as UI engine behind gated performance validation |
+| FR-017 | Responsive navigation/layout | DayFlow views must preserve mobile/desktop behavior in Cortex shell |
+| FR-018 | Keyboard shortcuts/accessibility behaviors | Requires explicit keyboard plugin and audit for parity |
+| FR-026 | Schedule timeline of tasks/events | Shared event source preserved through adapter layer |
+| FR-027 | Google sync + inbound read-only + outbound two-way | Preserved in Cortex backend; DayFlow remains presentation/interaction layer |
 
 ## Implementation Shape (Planned)
 
-1. Introduce a `calendar workspace` controller/hook layer in frontend.
-2. Add DayFlow adapter module for event mapping + permission mapping.
-3. Migrate Week view rendering to DayFlow first (keep existing service/store behavior).
-4. Add Day view rendering for Today schedule surface.
-5. Add Month continuous navigation/scrolling in the same workspace.
-6. Enforce Google read-only/editable policy at adapter level.
-7. Expand hook/integration tests to lock parity behavior.
+1. Build `CalendarWorkspace` hook/controller as the single frontend calendar state boundary.
+2. Implement DayFlow adapter with event/permission mapping and delta sync.
+3. Run spike prototype for week view + task/event drag semantics.
+4. Add month virtual-scroll validation harness with realistic event density.
+5. Add permission guards for mixed editability behavior (Google inbound vs Cortex-managed).
+6. Run a11y/mobile audit and keyboard parity tests.
+7. Migrate views incrementally: Week -> Day -> Month (same workspace/state source).
 
 ## Consequences
 
 ### Positive
 
-- Single calendar source for Day/Week/Month UI behavior.
-- Lower rendering complexity and less duplicated drag/resize code.
-- Clear boundary for upgrades and optional future vendor replacement.
+- One calendar architecture for Day/Week/Month and Today schedule.
+- Lower duplicated calendar UI logic in Cortex.
+- Explicit guardrails against perf and UX regressions.
 
 ### Risks
 
-- Adapter mistakes could break task-vs-event persistence semantics.
-- Vendor upgrades may introduce UI API changes.
-- Read-only/editable policy must be explicit to avoid accidental Google edits.
+- Adapter complexity can become a bottleneck without strict diff-sync discipline.
+- Per-event permission behavior may need extension work due global read-only model.
+- Upstream API/plugin changes can impact integration timing.
 
-## Paired-PR/Contracts Impact
+## Paired-PR / Contracts Impact
 
-No new IPC contract is required for this ADR by itself. If calendar payloads or command semantics change during implementation, paired contracts updates are mandatory per repo protocol.
+No new IPC contract is required by this ADR alone. If implementation changes calendar payloads, permissions fields, or command behavior, paired updates across contracts/frontend/backend are mandatory per repo protocol.
