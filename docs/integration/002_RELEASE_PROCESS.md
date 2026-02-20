@@ -14,6 +14,7 @@ This document tracks integration-level submodule pinning for Cortex OS.
 
 | Date (UTC) | Scope | Backend SHA | Frontend SHA | Contracts SHA | Notes |
 |------------|-------|-------------|--------------|---------------|-------|
+| 2026-02-20 | Week planner + task editor + trip setup reliability | `8f1f4c9` | `ec7f56e` | `3a6898d` | Week view now supports persisted drag/drop + explicit event edit/save; task modal now uses local draft with explicit save to prevent TipTap/tag reset loops; meals planner slot matching and in-context recipe creation flow are hardened; trip creation now captures destination/date/duration/optional budget; contracts docs updated for optional `travel.createTrip budget?` and ADR-0016 is added for future macro tracking. |
 | 2026-02-19 | Phase 2 FR-027 hardening | `c6b17a7` | `14b0426` | `e257e5c` | Implemented real `integrations_trigger_sync` flow, fixed frontend lint errors, updated traceability + MEMORY. |
 | 2026-02-19 | FR-027 reconciliation closure | `69d6bf9` | `14b0426` | `e257e5c` | Added outbound update/delete reconciliation in `integrations_trigger_sync`, timestamp conflict handling, and orphan Cortex-event cleanup. Updated traceability + MEMORY to close the FR-027 gap. |
 | 2026-02-19 | FR-027 reconciliation hardening | `097cdc6` | `14b0426` | `e257e5c` | Removed 90-day bound from Cortex orphan sweep so delete propagation reconciles full history. |
