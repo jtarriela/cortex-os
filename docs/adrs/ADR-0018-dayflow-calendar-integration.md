@@ -153,6 +153,23 @@ DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), 
 - Per-event permission behavior likely needs upstream drag-plugin extension or a maintained fork.
 - Upstream API/plugin changes can impact integration timing.
 
+### Risk Mitigation Strategy
+
+| Risk | Mitigation Strategy | Verification / Exit Criteria | Fallback / Decision Rule |
+|------|---------------------|------------------------------|--------------------------|
+| Adapter complexity / diff-sync bottleneck | Keep a strict anti-corruption layer in `CalendarWorkspace`: normalized event index (`id -> event`), delta calculator (`add/update/delete` only), and single adapter-owned mutation path. Prohibit full app re-init on ordinary edits. | State Sync Gate passes with representative load and no full remount on single-event edits. Regression tests cover drag, resize, create, delete, and external drop update paths. | If delta sync cannot remain stable/performant, pause migration after week-view spike and keep existing month/day implementations until adapter complexity is reduced. |
+| Preact/React boundary context drift | Treat DayFlow as isolated runtime. Route all Cortex-specific rendering through React content slots and typed bridge props/callbacks. Do not rely on Preact defaults for context-dependent behavior (permissions, theme, feature flags, telemetry). | Context bridge checklist passes in integration tests (theme, permissions, feature toggles, telemetry hooks) for Week/Day/Month surfaces. | If any required behavior cannot be bridged reliably, keep that behavior in Cortex-owned wrapper UI rather than DayFlow internal UI. |
+| Per-event mixed editability (Google read-only vs Cortex editable) | Implement this as a hard gate: upstream contribution request for per-event drag/resize guards (for example event-level draggable/resizable callbacks). Prepare maintained patch/fork only if upstream SLA misses release needs. No snap-back UX as steady-state. | Mixed Editability Gate passes: read-only events cannot enter drag/resize interaction; Cortex-managed events remain editable; no visible forbidden move then revert pattern. | If event-level guards are unavailable in time, block full replacement for mixed-source editing scenarios and continue on existing calendar for that scope until upstream/fork path is ready. |
+| Upstream API/plugin churn | Pin DayFlow versions, run adapter contract tests in CI, and upgrade in scheduled windows only. Keep adapter surface small and versioned to isolate upstream changes. | CI contract suite passes against pinned version and target upgrade candidate before merge. Upgrade checklist is completed per release window. | Freeze on last known-good DayFlow version and defer upgrades when breaking changes are detected without approved migration bandwidth. |
+
+### Execution Plan (Mitigation-Oriented)
+
+1. Build adapter/core invariants first (delta sync + no-remount policy + test harness).
+2. Implement React content-slot bridge and validate context-dependent behaviors.
+3. Complete external sidebar task-drop prototype and persistence parity checks.
+4. Resolve mixed editability via upstream PR (preferred) or controlled fork decision.
+5. Run pinned-version CI contract suite and promote only when all gates pass.
+
 ## Paired-PR / Contracts Impact
 
 No new IPC contract is required by this ADR alone. If implementation changes calendar payloads, permissions fields, or command behavior, paired updates across contracts/frontend/backend are mandatory per repo protocol.
