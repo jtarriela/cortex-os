@@ -2,6 +2,7 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
+- **Calendar architecture consolidation planned:** ADR-0018 proposes a centralized Day/Week/Month calendar workspace with DayFlow as the rendering engine and existing Google sync semantics preserved.
 - **Phase 3 epic completion pass implemented (issue #4): search + state + secondary module persistence/analytics delivered across FE/BE/contracts.**
 - **Phase 4 closure pass implemented (issue #5): vault onboarding, secure settings, save-commit indexing semantics, RAG commands, and frontend review/usage UX integrated.**
 - **Phase 5 AI/Voice hardening implemented:** real OpenAI/Gemini STT/TTS adapters, provider-routed voice settings (`sttProvider`/`ttsProvider`), and contracts/docs sync for ADR-0004/0005/0013 (current STT default: online `gemini`; local Whisper deferred).
@@ -41,6 +42,7 @@
 - ADR-0013: Voice/Audio architecture — local Whisper + configurable TTS (ACCEPTED)
 - ADR-0015: Vault onboarding + secure settings + incremental reindex semantics (**IMPLEMENTED** — Phase 5 verified; vault_create/select/profile, save_commit, index_queue_status, secret_set/get/delete confirmed wired)
 - ADR-0016: Meals macro-tracker extension roadmap (PROPOSED)
+- ADR-0018: DayFlow calendar integration + centralized calendar workspace (PROPOSED)
 
 ## Roadmap — Issue Tracking
 
@@ -120,3 +122,5 @@
 - 2026-02-20: **Week planner/task editor/travel setup reliability pass implemented (workspace).** Frontend week view now supports drag-drop task scheduling with persisted refresh and an explicit event-detail save flow for date/time/location/description edits; task modal editing now uses local draft + explicit save to avoid per-keystroke persistence resets affecting TipTap/tags; Meals planner slot assignment now uses deterministic week-date mapping with in-context recipe creation flow; Travel new-trip flow now captures destination/date/duration/optional budget and derives itinerary days from trip metadata. Backend `travel_create_trip` now accepts optional `budget` and persists it into overview markdown + trip props. Contracts docs updated for `travel.createTrip budget?`; ADR-0016 added for future macro-tracking extension.
 - 2026-02-20: **Frontend projects-board bug sweep merged + pinned.** Frontend PR `cortex-os-frontend#37` merged at `3039b12` (issues #27/#28/#30/#31/#32/#33/#34/#35): in-app project creation modal, project-filter diagnostics, functional master-task sort/group controls, and wired Projects-board task creation actions. Integration release log and traceability were updated alongside the submodule bump.
 - 2026-02-20: **Task markdown/title persistence bug fixed and documented.** User-reported bug: TaskDetailModal edits appeared saved in-session but markdown/title did not persist to task cards after reload. Frontend fix shipped at `60daf9f`: `services/backend.ts` now sends task title via top-level `page_update_props.title` and persists markdown via `page_update_body` in the task update path; backend smoke regression coverage added. Integration docs updated (`docs/traceability.md`, `docs/integration/002_RELEASE_PROCESS.md`) and submodule pins refreshed.
+- 2026-02-20: **ADR-0018 added (calendar platform evolution).** Proposed DayFlow integration with a centralized frontend calendar workspace that serves Day/Week/Month views, including continuous month navigation/scrolling, while preserving backend-owned Google OAuth/sync and two-way Cortex event reconciliation rules. FR-015 wording and traceability calendar notes were updated to reflect scope.
+- 2026-02-20: **Integration pin sync for calendar hardening + ADR planning.** `cortex-os` now tracks backend `3680664`, frontend `a336452`, contracts `69b5609`; release log updated with calendar interaction hardening and ADR-0018 documentation sync.
