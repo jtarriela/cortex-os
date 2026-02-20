@@ -2,7 +2,34 @@
 
 ## Status
 
-**Approved** (2026-02-19)
+**Approved** (2026-02-19) — Core ACCEPTED/IMPLEMENTED; 3 commands deferred (see Phase 5 Verification Notes below)
+
+## Phase 5 Verification Notes (2026-02-19, cortex-os#12)
+
+### Verified Present
+- `crates/integrations/google_calendar/` — compiles clean (`cargo check -p google_calendar` ✅)
+- `oauth.rs` — RFC 8252 desktop loopback OAuth, CSRF state token, code exchange, token refresh
+- `client.rs` — `GoogleCalendarClient` wrapper (list calendars, events CRUD)
+- `sync.rs` — `SyncEngine` with incremental `syncToken`-based polling
+- `models.rs` — serde-deserializable types for Google API responses
+- Settings → Integrations tab — 4th tab in `Settings.tsx` with Connect/Sync UI
+- IPC commands wired: `integrations_google_auth`, `integrations_google_calendars`, `integrations_trigger_sync`, `integrations_get_settings`, `integrations_update_settings`
+- Storage: `integration_and_google_auth_roundtrip` test covers `GoogleAuthSettings` + `IntegrationSettings` persistence
+
+### Smoke Test Evidence Added
+- `google::oauth::tests::oauth_flow_requires_client_id_env_var` — verifies credential guard (no TCP/network)
+- `google::oauth::tests::parse_callback_url_extracts_query_params` — verifies CSRF callback parsing
+- `google::oauth::tests::parse_callback_url_rejects_empty_request` — rejects malformed requests
+- `google::models::tests::google_event_deserializes_from_api_json` — full event + extendedProperties
+- `google::models::tests::calendar_list_entry_deserializes_from_api_json` — calendar list with color
+- `google::models::tests::google_event_all_day_uses_date_field` — all-day event variant
+
+### Gaps Deferred to cortex-os-backend#26
+| Command | Status |
+|-|-|
+| `integrations_disconnect_google` | Missing — revoke + page cleanup not implemented; only settings cleared |
+| `integrations_google_auth_status` | Missing — covered partially by `integrations_get_settings` |
+| `integrations_set_calendar_color` | Missing — no per-calendar color override |
 
 ## Context
 
