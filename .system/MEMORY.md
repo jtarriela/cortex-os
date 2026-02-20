@@ -2,7 +2,7 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
-- **Calendar architecture consolidation planned:** ADR-0018 now defines a gated DayFlow integration (performance, state-sync, drag semantics, Google policy, a11y/mobile) with a centralized Day/Week/Month calendar workspace and Cortex-owned Google sync.
+- **Calendar architecture consolidation accepted:** ADR-0018 is now ACCEPTED with execution epics `#23-#27` (adapter foundation, interaction parity, mixed editability, a11y/keyboard/responsive parity, performance/upgrade governance).
 - **Phase 3 epic completion pass implemented (issue #4): search + state + secondary module persistence/analytics delivered across FE/BE/contracts.**
 - **Phase 4 closure pass implemented (issue #5): vault onboarding, secure settings, save-commit indexing semantics, RAG commands, and frontend review/usage UX integrated.**
 - **Phase 5 AI/Voice hardening implemented:** real OpenAI/Gemini STT/TTS adapters, provider-routed voice settings (`sttProvider`/`ttsProvider`), and contracts/docs sync for ADR-0004/0005/0013 (current STT default: online `gemini`; local Whisper deferred).
@@ -42,7 +42,7 @@
 - ADR-0013: Voice/Audio architecture — local Whisper + configurable TTS (ACCEPTED)
 - ADR-0015: Vault onboarding + secure settings + incremental reindex semantics (**IMPLEMENTED** — Phase 5 verified; vault_create/select/profile, save_commit, index_queue_status, secret_set/get/delete confirmed wired)
 - ADR-0016: Meals macro-tracker extension roadmap (PROPOSED)
-- ADR-0018: DayFlow calendar integration + centralized calendar workspace (PROPOSED)
+- ADR-0018: DayFlow calendar integration + centralized calendar workspace (ACCEPTED)
 
 ## Roadmap — Issue Tracking
 
@@ -87,6 +87,15 @@
 | cortex-os-frontend | #5 | [Epic] AI Frontend Migration + Streaming + Approval |
 | cortex-os-contracts | #3 | [Epic] AI Command Specifications |
 
+### Phase 5.1: Calendar Platform Integration (ADR-0018)
+| Repo | Issue | Title |
+|------|-------|-------|
+| cortex-os | #23 | [Epic][ADR-0018] Calendar Workspace + DayFlow Adapter Foundation |
+| cortex-os | #24 | [Epic][ADR-0018] Interaction Parity: External Task Drop + Drag/Resize |
+| cortex-os | #25 | [Epic][ADR-0018] Mixed Editability + Google Permission Enforcement |
+| cortex-os | #26 | [Epic][ADR-0018] Accessibility, Keyboard, and Responsive Parity |
+| cortex-os | #27 | [Epic][ADR-0018] Performance Benchmarks + Upgrade Governance |
+
 ## Functional Requirements
 - 28 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-028)
 - All sourced from frontend implementation
@@ -127,3 +136,5 @@
 - 2026-02-20: **ADR-0018 revised after upstream DayFlow source evaluation (`/Users/jdtarriela/proj/calendar`, `aca8f8f`).** Decision changed from direct migration to gated adoption with explicit checks for month virtualization performance, delta-based adapter sync, task/event drag semantics, Google mixed-permission policy, and a11y/keyboard/mobile parity. FR linkage expanded to include FR-017/FR-018.
 - 2026-02-20: **ADR-0018 updated with DayFlow v3 boundary/plugin details.** Added explicit Preact core + React adapter content-slot boundary risks, mandatory plugin bootstrap (`@dayflow/plugin-drag`, `@dayflow/plugin-keyboard-shortcuts`), external HTML5 sidebar task-drop gate, and stronger mixed-editability requirement with upstream PR/fork path for per-event drag/resize permissions.
 - 2026-02-20: **ADR-0018 risk reconciliation added.** Document now includes a risk-mitigation register (adapter complexity, Preact/React boundary, per-event permission model, upstream churn) with verification criteria and explicit fallback decisions.
+- 2026-02-20: **ADR-0018 promoted to ACCEPTED and execution epics created.** GitHub epics opened in integration repo: `#23` (adapter foundation), `#24` (interaction parity/external drop), `#25` (mixed editability), `#26` (a11y/keyboard/responsive), `#27` (performance/upgrade governance).
+- 2026-02-20: **Traceability plan updated for ADR-0018 execution.** `docs/traceability.md` now includes FR-row linkage updates (FR-001/015/017/018/027) and an explicit ADR-0018 Delivery Traceability table mapping epics -> FRs -> evidence targets.

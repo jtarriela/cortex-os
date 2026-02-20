@@ -2,7 +2,7 @@
 
 ## Status
 
-PROPOSED (revised 2026-02-20)
+ACCEPTED (2026-02-20)
 
 ## Context
 
@@ -106,7 +106,16 @@ DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), 
 - Keep DayFlow isolated behind adapter + tests so Cortex can update alongside upstream safely.
 - For per-event mixed editability, attempt upstream contribution first; fork is acceptable if blocking requirements are not delivered in time.
 
-## Integration Gates (Required Before ACCEPTED)
+### 7.1) Source Acquisition and Repository Strategy
+
+Integration decision for third-party source placement:
+
+- **Do not clone/vendor DayFlow inside `cortex-os/`** (no new top-level subfolder, no submodule).
+- Consume DayFlow via package dependencies in `frontend/` (`@dayflow/react`, `@dayflow/core`, required plugins).
+- Keep evaluation clone (`/Users/jdtarriela/proj/calendar`) as a local research workspace only, not part of integration source of truth.
+- If fork is required, use a dedicated fork repository and pin frontend dependency to fork tag/commit with explicit release notes.
+
+## Integration Gates (Must Be Green For Implementation Rollout)
 
 1. **Performance Gate**: month continuous scroll benchmark passes target FPS/memory/no-freeze thresholds on representative data.
 2. **State Sync Gate**: adapter proves O(changed-items) updates without full calendar remount/reset on single-event edits.
@@ -114,6 +123,16 @@ DayFlow keyboard behavior is pluginized (`@dayflow/plugin-keyboard-shortcuts`), 
 4. **Google Policy Gate**: product/design sign-off for inbound Google read-only behavior (or explicit approved exception scope).
 5. **Mixed Editability Gate**: implementation proves per-event edit guards (Google inbound locked, Cortex-managed editable) without relying on post-drop snap-back; upstream PR/fork plan must be explicit if needed.
 6. **A11y/Mobile Gate**: keyboard navigation + focus + responsive audit passes checklist, with `@dayflow/plugin-keyboard-shortcuts` enabled and tested.
+
+## Delivery Epics (GitHub)
+
+This ADR is executed through the following epics in `cortex-os`:
+
+1. [#23](https://github.com/jtarriela/cortex-os/issues/23) Calendar Workspace + DayFlow Adapter Foundation
+2. [#24](https://github.com/jtarriela/cortex-os/issues/24) Interaction Parity: External Task Drop + Drag/Resize
+3. [#25](https://github.com/jtarriela/cortex-os/issues/25) Mixed Editability + Google Permission Enforcement
+4. [#26](https://github.com/jtarriela/cortex-os/issues/26) Accessibility, Keyboard, and Responsive Parity
+5. [#27](https://github.com/jtarriela/cortex-os/issues/27) Performance Benchmarks + Upgrade Governance
 
 ## FR Coverage
 
