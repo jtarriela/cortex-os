@@ -34,6 +34,7 @@ Cortex will support an additional **linked external source** in Settings:
 
 - `Obsidian Link` toggle
 - `Vault path` input
+- optional include/exclude path selector (folders/files) before first import
 - `Mode` selector (initially `read_only`)
 - `Add` + `Sync now` + sync status UI
 
@@ -48,6 +49,12 @@ Initial implementation is `read_only`:
 - editing a linked note in Cortex is blocked or redirected to "Save as Cortex note"
 
 `read_write` may be added later with explicit conflict policy ADR follow-up.
+
+### 2.1) Hash vs Embedding semantics (explicit)
+
+- **Hash** is a change detector (`same`/`different`) used by sync/index queues.
+- **Embedding** is a semantic vector used by retrieval ranking.
+- Hash changes may trigger re-embed work; embeddings themselves are not used to detect file changes.
 
 ### 3) Metadata-first sync schema
 
@@ -103,8 +110,10 @@ The linked-vault pipeline stores metadata/state in DB, not full mirrored file co
 #### Initial link
 
 1. Validate path + access + loop/symlink boundaries.
-2. Metadata crawl for `.md` files only (`rel_path`, `size`, `mtime`, optional `file_id`).
-3. Queue ingest only for files missing or changed versus manifest/index state.
+2. Metadata crawl for `.md` files only (`rel_path`, `size`, `mtime`, optional `file_id`) with include/exclude path filters applied.
+3. First-link import computes content hashes and queues ingest for selected files.
+4. Initial import workers run in parallel with bounded concurrency (do not saturate all system threads blindly).
+5. UI shows phase progress (`scan -> hash -> parse/index -> embed`) and per-phase counts so users can wait explicitly.
 
 #### Ongoing changes
 
@@ -112,6 +121,7 @@ The linked-vault pipeline stores metadata/state in DB, not full mirrored file co
 2. Queue coalescing ensures one active queued job per file.
 3. Periodic reconcile scan catches missed watcher events.
 4. Background workers process queue with bounded concurrency/backpressure.
+5. Hash is computed only for candidate-changed files (metadata/watcher indicated), not for every file on every cycle.
 
 No full-vault reindex on ordinary edits.
 
@@ -143,15 +153,33 @@ For queued files:
 
 This keeps RAG latency stable even for very large linked vaults.
 
+### Stage D: Embedding provider policy (AI settings)
+
+Embeddings should be configurable in AI Settings with:
+
+- `embeddingProvider` = `same_as_model | openai | gemini | ollama | hash`
+- default: `same_as_model`
+
+Default behavior:
+
+- `same_as_model` attempts to use the same provider family and credential already configured for the active model.
+- if provider embeddings are unavailable for that adapter, retrieval falls back to `hash` behavior with status surfaced in diagnostics.
+
+Rationale:
+
+- chat model and embedding model are separable, but defaulting to "same as model" reduces setup friction.
+- explicit embedding provider selection is required for cost/performance/privacy control.
+
 ---
 
 ## Scaling Constraints and Guardrails
 
-1. Initial scan is metadata-first; defer content hash computation until needed.
+1. Initial scan/import may hash many files once; it must run as bounded parallel work with progress visibility.
 2. Worker concurrency is capped; queue supports pause/resume and progress metrics.
-3. Embedding jobs are chunk-incremental and coalesced per file.
-4. Very large files use size guards/chunk caps with error status surfaced in sync UI.
-5. All paths are canonicalized and restricted under configured linked root.
+3. After initial link, hash only candidate-changed files (watcher + metadata), not full-vault hash sweeps.
+4. Embedding jobs are chunk-incremental and coalesced per file.
+5. Very large files use size guards/chunk caps with error status surfaced in sync UI.
+6. All paths are canonicalized and restricted under configured linked root.
 
 ---
 
@@ -176,6 +204,8 @@ Per AGENTS/protocol, backend command additions require paired PR updates in `cor
 - scales better for large Obsidian datasets
 - clear read-only safety boundary for v1
 - preserves fast RAG via indexed retrieval
+- clarifies first-import behavior and user-visible progress for large vaults
+- supports embedding cost/privacy tradeoffs through provider selection
 
 ### Risks
 
@@ -188,4 +218,3 @@ Per AGENTS/protocol, backend command additions require paired PR updates in `cor
 - periodic reconcile scan + watcher coalescing
 - optional hash fallback when metadata signals are ambiguous
 - explicit UI labels: "Primary Cortex Vault" vs "Linked Obsidian Vault (Read-only)"
-
