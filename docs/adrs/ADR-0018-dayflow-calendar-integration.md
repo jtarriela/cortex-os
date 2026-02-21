@@ -121,7 +121,7 @@ Integration decision for third-party source placement:
 2. **State Sync Gate**: adapter proves O(changed-items) updates without full calendar remount/reset on single-event edits.
 3. **External Drop Gate**: prototype demonstrates sidebar task HTML5 drag/drop into week and month surfaces with correct timed/all-day intent mapping and persistence.
 4. **Google Policy Gate**: product/design sign-off for inbound Google read-only behavior (or explicit approved exception scope).
-5. **Mixed Editability Gate**: implementation proves per-event edit guards (Google inbound locked, Cortex-managed editable) without relying on post-drop snap-back; upstream PR/fork plan must be explicit if needed.
+5. **Mixed Editability Gate** ✅ **(In Review 2026-02-20)**: `canEditEvent` / `canDeleteEvent` pre-flight guards across all `useWeekDashboard` mutation paths; `CalendarEvent.readOnly` field threaded through full adapter pipeline; backend `is_read_only_event` + `update_calendar_event_props` + `delete_calendar_event` + `calendar_event_is_editable` IPC command; 6 TDD tests in `e25_permissions.rs`. Per-event DayFlow drag/resize API unavailable upstream — guards applied at callback interception layer + visual indicator (no snap-back as steady-state). See PRs: [frontend#45](https://github.com/jtarriela/cortex-os-frontend/pull/45), [backend#36](https://github.com/jtarriela/cortex-os-backend/pull/36), [contracts#20](https://github.com/jtarriela/cortex-os-contracts/pull/20).
 6. **A11y/Mobile Gate**: keyboard navigation + focus + responsive audit passes checklist, with `@dayflow/plugin-keyboard-shortcuts` enabled and tested.
 
 ## Delivery Epics (GitHub)
