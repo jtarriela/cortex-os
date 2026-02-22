@@ -101,6 +101,9 @@ git submodule update --init --recursive
 # Pull latest from each submodule's main branch
 git submodule update --remote --merge
 
+# Refresh frontend dependencies after a submodule SHA update
+cd frontend && npm ci && cd ..
+
 # After submodule merges, bump SHA in integration repo
 git add backend frontend contracts
 git commit -m "chore: bump submodule SHAs post-merge"
