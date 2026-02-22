@@ -85,7 +85,8 @@ DayFlow does not implement Google OAuth/sync. Cortex keeps ownership of all Goog
 
 Policy for this ADR:
 
-- inbound Google external events remain read-only in Cortex UI (FR-027 baseline)
+- non-editable Google calendars remain read-only in Cortex UI (FR-027 policy baseline)
+- editable selected Google calendars use task-mirror workflow and remain writable with source-event writeback
 - Cortex-managed events remain editable and two-way synced
 - permission decisions come from backend metadata, not UI inference
 
@@ -120,7 +121,7 @@ Integration decision for third-party source placement:
 1. **Performance Gate** ✅ **IMPLEMENTED (2026-02-21)**: frontend E27 harness added (`tests/perf/calendarMonthScroll.perf.test.ts`) with reproducible month-transition, interaction-latency, and heap-growth thresholds; dedicated CI guardrail suite wired via `npm run test:dayflow-guardrails`. Backend E27 added calendar query performance indexes (`MIGRATION_V4`) and query-plan/baseline harness (`crates/storage/tests/e27_performance.rs`) plus bounded sync-run guardrails in `integrations_trigger_sync`. Merged via [frontend#47](https://github.com/jtarriela/cortex-os-frontend/pull/47), [backend#38](https://github.com/jtarriela/cortex-os-backend/pull/38), [contracts#22](https://github.com/jtarriela/cortex-os-contracts/pull/22); integration pins frontend `01e25af`, backend `10c714b`, contracts `821f2cc`.
 2. **State Sync Gate**: adapter proves O(changed-items) updates without full calendar remount/reset on single-event edits.
 3. **External Drop Gate**: prototype demonstrates sidebar task HTML5 drag/drop into week and month surfaces with correct timed/all-day intent mapping and persistence.
-4. **Google Policy Gate**: product/design sign-off for inbound Google read-only behavior (or explicit approved exception scope).
+4. **Google Policy Gate** ✅ **IMPLEMENTED (2026-02-22)**: explicit selected-calendar policy — read-only for non-editable calendars, writable task-mirrors for editable calendars, mirrored delete semantics, and progress-aware sync status surface.
 5. **Mixed Editability Gate** ✅ **IMPLEMENTED (2026-02-20)**: `canEditEvent` / `canDeleteEvent` pre-flight guards across all `useWeekDashboard` mutation paths; `CalendarEvent.readOnly` field threaded through full adapter pipeline; backend `is_read_only_event` + `update_calendar_event_props` + `delete_calendar_event` + `calendar_event_is_editable` IPC command; 6 TDD tests in `e25_permissions.rs`. Per-event DayFlow drag/resize API unavailable upstream — guards applied at callback interception layer + visual indicator (no snap-back as steady-state). Merged: frontend `bb6bee7`, backend `fcc04ae`, contracts `fe66cbf`.
 6. **A11y/Mobile Gate** ✅ **IMPLEMENTED (2026-02-20)**: `@dayflow/plugin-keyboard-shortcuts` active in bootstrap; `handleCalendarKeyDown` covers Escape dismiss; `DayflowCalendarSurface` wrapper: `role="region"` + `aria-label="Calendar"` + `tabIndex={0}` + `onKeyDown`; event slots: `role="button"` + `aria-label` + `aria-disabled`. Responsive container: `w-full overflow-hidden`. Backend interval guard (`start < end`) added to `reschedule_event` + `update_calendar_event_props` (6 TDD tests in `e26_interval.rs`). 9 new frontend a11y/keyboard tests (162 total). See PRs: [frontend#46](https://github.com/jtarriela/cortex-os-frontend/pull/46), [backend#37](https://github.com/jtarriela/cortex-os-backend/pull/37), [contracts#21](https://github.com/jtarriela/cortex-os-contracts/pull/21).
 
@@ -154,7 +155,7 @@ This ADR is executed through the following epics in `cortex-os`:
 | FR-017 | Responsive navigation/layout | DayFlow views must preserve mobile/desktop behavior in Cortex shell |
 | FR-018 | Keyboard shortcuts/accessibility behaviors | Requires explicit keyboard plugin and audit for parity |
 | FR-026 | Schedule timeline of tasks/events | Shared event source preserved through adapter layer |
-| FR-027 | Google sync + inbound read-only + outbound two-way | Preserved in Cortex backend; DayFlow remains presentation/interaction layer |
+| FR-027 | Google sync + selected editable mirrors + outbound two-way | Preserved in Cortex backend; DayFlow remains presentation/interaction layer |
 
 ## Implementation Shape (Planned)
 

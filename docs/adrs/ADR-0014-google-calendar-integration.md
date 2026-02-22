@@ -2,7 +2,7 @@
 
 ## Status
 
-**Approved** (2026-02-19) — Core ACCEPTED/IMPLEMENTED; 3 commands deferred (see Phase 5 Verification Notes below)
+**IMPLEMENTED** (2026-02-22) — Core OAuth/sync delivered with editable selected-calendar mirrors, source-event writeback, mirrored delete command, and progress telemetry.
 
 ## Phase 5 Verification Notes (2026-02-19, cortex-os#12)
 
@@ -15,6 +15,7 @@
 - Settings → Integrations tab — 4th tab in `Settings.tsx` with Connect/Sync UI
 - IPC commands wired: `integrations_google_auth`, `integrations_google_calendars`, `integrations_trigger_sync`, `integrations_get_settings`, `integrations_update_settings`
 - Storage: `integration_and_google_auth_roundtrip` test covers `GoogleAuthSettings` + `IntegrationSettings` persistence
+- Phase 6 additions: `editable_calendars` settings, full-history initial sync behavior (no 90-day floor), `integrations_delete_mirrored_event`, `integrations_sync_progress` event payload, and calendar metadata response (`id/summary/backgroundColor/primary`)
 
 ### Smoke Test Evidence Added
 - `google::oauth::tests::oauth_flow_requires_client_id_env_var` — verifies credential guard (no TCP/network)
@@ -195,7 +196,11 @@ google_calendar_name: "Work"
 color: "#4285f4"
 ```
 
-Inbound events are **read-only in Cortex** (edits to non-Cortex calendar events are not pushed back). They appear on the Week Planner grid with their calendar color but cannot be dragged or resized.
+Inbound behavior is now **policy-based by selected calendar**:
+
+- Calendars in `synced_calendars` but not `editable_calendars` remain read-only in Cortex.
+- Calendars in `editable_calendars` are mirrored into task-style entities (task + linked note managed section + bridge metadata) and are writable from Cortex.
+- Editable mirror changes write back to the original Google event in the source calendar.
 
 #### Outbound (Cortex → Google)
 
