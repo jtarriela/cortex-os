@@ -1,6 +1,6 @@
 # ADR-0020: Block-Based Editor for Projects & Tasks (TipTap Custom Extensions)
 
-**Status:** ACCEPTED
+**Status:** IMPLEMENTED
 **Date:** 2026-02-21
 **Deciders:** Architecture review
 **FR:** FR-002 (Project Management), FR-001 (Tasks), FR-003 (Notes/Wikilinks)
@@ -81,6 +81,7 @@ The link/embed commands open a page search sub-menu (uses existing `search_globa
 - [x] Phase 3: Page Embed block node (`![[target]]`) with markdown block parse/serialize and block card node view
 - [x] Phase 4: Slash command insertion menu (`/` commands for heading/task/link/embed/etc.) with page search picker
 - [x] Phase 5: Graph edge sync validation + traceability update
+- [x] Phase 6: Projects interaction closure (selection styling, context menus + overflow parity, master-board drag/drop persistence, hook extraction, milestone source-of-truth drift fix)
 
 ### Phase 3 Evidence
 
@@ -113,6 +114,21 @@ The link/embed commands open a page search sub-menu (uses existing `search_globa
 ### Phase 5 Notes
 
 - Validation covers `[[...]]` extraction and confirms edge replacement semantics after body edits (old `wikilink/backlink` edges removed, new edges inserted after reindex).
+
+### Phase 6 Evidence
+
+- Editor selection styling: `frontend/index.css`
+- Projects controller extraction: `frontend/hooks/useProjectsIndex.ts`
+- Projects/master-task context menus + overflow parity: `frontend/views/ProjectsIndex.tsx`
+- Master-board drag/drop persistence: `frontend/hooks/useProjectsIndex.ts`
+- Project delete unassign flow: `frontend/hooks/useProjectsIndex.ts`
+- Milestone source-of-truth sync in project surfaces: `frontend/views/ProjectDetail.tsx`, `frontend/components/RightDrawer.tsx`, `frontend/utils/projectMilestones.ts`
+- Tests: `frontend/tests/hooks/useProjectsIndex.test.ts`, `frontend/tests/project_milestones.spec.ts`, `frontend/tests/hooks/useProjectTimeline.test.ts`
+
+### Phase 6 Notes
+
+- ADR-0017 requirements are now met for `ProjectsIndex`: view logic moved to `useProjectsIndex` and service/data-fetch concerns removed from view layer.
+- Milestone synchronization and timeline planning behavior are governed by ADR-0021; ADR-0020 remains the editor/body and interaction baseline.
 
 ---
 
