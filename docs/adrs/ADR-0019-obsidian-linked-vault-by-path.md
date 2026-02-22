@@ -1,7 +1,9 @@
 # ADR-0019: Obsidian Linked Vault by Path (Metadata-First Sync + Indexed RAG)
 
-**Status:** PROPOSED
+**Status:** IMPLEMENTED
 **Date:** 2026-02-21
+**Accepted:** 2026-02-22
+**Implemented:** 2026-02-22
 **Deciders:** Architecture review
 **FR:** FR-003, FR-020, FR-023, FR-028
 **Related:** ADR-0006 (EAV/Page schema), ADR-0015 (vault onboarding + save-commit indexing)
@@ -80,7 +82,7 @@ The linked-vault pipeline stores metadata/state in DB, not full mirrored file co
 - `mtime_ns` (or ms, monotonic preference)
 - `file_id` (inode/file-id where available, optional)
 - `content_hash` (nullable/lazy)
-- `exists` (bool)
+- `is_present` (bool)
 - `deleted_at` (nullable)
 - `last_seen_at`
 
