@@ -1,6 +1,6 @@
 # ADR-0020: Block-Based Editor for Projects & Tasks (TipTap Custom Extensions)
 
-**Status:** APPROVED
+**Status:** ACCEPTED
 **Date:** 2026-02-21
 **Deciders:** Architecture review
 **FR:** FR-002 (Project Management), FR-001 (Tasks), FR-003 (Notes/Wikilinks)
@@ -71,6 +71,48 @@ Trigger on `/` at start of a line to show an insertable block menu:
 | Divider | Horizontal rule |
 
 The link/embed commands open a page search sub-menu (uses existing `search_global` IPC).
+
+---
+
+## Implementation Status (as of 2026-02-22)
+
+- [x] Phase 1: Milestones in body markdown (`TaskList` / `TaskItem`) with progress computed from body
+- [x] Phase 2: WikiLink inline node (`[[target]]`, `[[target|alias]]`) with markdown parse/serialize
+- [x] Phase 3: Page Embed block node (`![[target]]`) with markdown block parse/serialize and block card node view
+- [x] Phase 4: Slash command insertion menu (`/` commands for heading/task/link/embed/etc.) with page search picker
+- [x] Phase 5: Graph edge sync validation + traceability update
+
+### Phase 3 Evidence
+
+- Frontend extension: `frontend/extensions/PageEmbedNode.ts`
+- Frontend node view: `frontend/components/PageEmbedView.tsx`
+- Editor wiring: `frontend/components/TipTapEditor.tsx`
+- Tests: `frontend/tests/page_embed_node.spec.ts`
+
+### Phase 3 Notes
+
+- The embed parser is line-level (`![[...]]`) via a markdown-it block rule to keep embed semantics block-oriented.
+- The embed card supports click-to-navigate now; rich metadata hydration is exposed via optional resolver (`onResolve`) and can be expanded in follow-up work.
+
+### Phase 4 Evidence
+
+- Slash command utilities: `frontend/utils/slashCommands.ts`
+- Slash command tests: `frontend/tests/slash_commands.spec.ts`
+- Slash command + page picker editor UI: `frontend/components/TipTapEditor.tsx`
+
+### Phase 4 Notes
+
+- Slash menu opens when typing `/` at line start and supports keyboard navigation (`ArrowUp/ArrowDown/Enter/Escape`).
+- Link/embed commands open a second-stage page picker backed by `search_global` IPC and insert `wikilink` / `pageEmbed` nodes directly.
+
+### Phase 5 Evidence
+
+- Backend graph-edge sync test: `backend/crates/app/src/search.rs` (`graph_edges_refresh_after_wikilink_body_edit`)
+- Traceability updates: `docs/traceability.md` (`FR-002`, `FR-003`, `FR-023`)
+
+### Phase 5 Notes
+
+- Validation covers `[[...]]` extraction and confirms edge replacement semantics after body edits (old `wikilink/backlink` edges removed, new edges inserted after reindex).
 
 ---
 
