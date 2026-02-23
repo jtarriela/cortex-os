@@ -2,7 +2,7 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
-- **ADR-0027 Stage 3 implementation batch kicked off (issues + branches + implementation spec):** created parent `cortex-os#35` and child issues `cortex-os-contracts#25` / `cortex-os-backend#41` / `cortex-os-frontend#50`, cut/pushed issue-linked branches across all repos, and added review-facing implementation spec `docs/implementation/ADR-0027-stage3-travel-maps-routing-google-export-implementation.md` with ADR cross-reference.
+- **ADR-0027 Stage 3 implemented and integration pin/closure sync completed:** component PRs `cortex-os-contracts#26`, `cortex-os-backend#42`, and `cortex-os-frontend#51` plus kickoff integration PR `cortex-os#36` are merged; follow-up integration closure issue `cortex-os#37` pins submodules to backend `3dd6347`, contracts `c3165fb`, frontend `34095bd`, syncs traceability/release log/MEMORY, and closes ADR-0027 as IMPLEMENTED.
 - **Travel v2 staged planning docs + ADR set added:** integration plan `docs/integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md` and stage ADRs `ADR-0025` through `ADR-0031` are now in repo as the execution blueprint for structured travel (locations/items/expenses, routing/maps, import/Gmail, AI planner, calendar push).
 - **Travel Stage 1/2 structured workspace implemented (initial slice):** backend/frontend/contracts now support `trip_location` / `trip_item` / `trip_expense`, workspace hydration, budget rollups, and legacy dual-read migration.
 - **Travel Stage 1/2 integrity patch pass completed in workspace (pending/performing local merge pin):** cross-trip location validation, travel kind guards, title-only markdown sync, duplicate-safe legacy migration, deterministic create-trip selection, hybrid per-location item pathing for new files, `travel.moveItem clearLocation?` contract semantics, and `useTravelWorkspace` controller tests are implemented.
@@ -60,7 +60,7 @@
 - ADR-0024: Finance mode selection + manual budgeting UI (**IMPLEMENTED** — Settings-driven mode + YNAB auth in Integrations + manual budget template)
 - ADR-0025: Travel v2 Stage 1 — Foundation, RAG indexing parity, and legacy migration (PROPOSED)
 - ADR-0026: Travel v2 Stage 2 — Itinerary, flights/lodging, budgeting (PROPOSED)
-- ADR-0027: Travel v2 Stage 3 — Maps, routing, and Google export (ACCEPTED)
+- ADR-0027: Travel v2 Stage 3 — Maps, routing, and Google export (**IMPLEMENTED** — Travel map tab + Google routing/export commands/caches + settings key integration delivered and integration pin synced)
 - ADR-0028: Travel v2 Stage 4A — Web/text/screenshot import (PROPOSED)
 - ADR-0029: Travel v2 Stage 4B — Gmail reservation scan (PROPOSED)
 - ADR-0030: Travel v2 Stage 5 — AI copilot + optimization preview (PROPOSED)
@@ -137,6 +137,7 @@
 - 29 FRs defined in `docs/functional_requirements.md` (FR-001 through FR-029)
 - All sourced from frontend implementation
 - FR-008 updated (2026-02-23) to reflect structured Travel Stage 1/2 workspace semantics (locations/items/expenses + legacy migration) in addition to legacy trip cards.
+- FR-008 updated (2026-02-23, later same day) to include ADR-0027 Stage 3 maps/routing/export implementation surface, tests, and integration pin evidence.
 - FR-020 complete in backend foundation. FR-021/FR-022 now have Phase 4 foundation implementation (PII redaction + review queue); further provider hardening remains.
 
 ## Recent Progress (Append-only)
@@ -201,3 +202,4 @@
 - 2026-02-23: **Travel v2 staged integration planning docs added.** Added `docs/integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md` plus stage ADRs `ADR-0025` through `ADR-0031` covering Stage 1→6 implementation slices (foundation/RAG, itinerary+budget, maps+routing+Google export, imports incl. Gmail scan, AI planner, calendar push hardening).
 - 2026-02-23: **Travel Stage 1/2 structured workspace slice implemented and merged to component `main` branches + integration pinned.** Backend added Travel v2 workspace/location/item/expense/budget/migration commands and RAG indexing parity for legacy travel creates; frontend added ADR-0017 `useTravelWorkspace` controller + structured Travel UI and budget flows; contracts added Travel v2 Stage 1-2 IPC rows. Integration `main` pinned to backend `aa1b51f`, frontend `276c959`, contracts `e34a55d` (`fcb6e87` superproject).
 - 2026-02-23: **Travel Stage 1/2 integrity patch merged locally across workspace repos (pin sync ready in integration commit).** Component local `main` SHAs: backend `6012c79`, frontend `1f6b7d5`, contracts `123afae`. Patch fixes travel item create/move cross-trip corruption risks, adds travel kind guards + title-only markdown/body sync, makes legacy migration duplicate-safe (`legacy_card_id`), adds hybrid per-location item pathing for new location-scoped files, makes create-trip selection deterministic, updates contracts docs (`travel.moveItem clearLocation?`, `0.10.2`), and adds regression tests (`cargo test -p cortex-app travel_`, `frontend/tests/hooks/useTravelWorkspace.test.ts`).
+- 2026-02-23: **ADR-0027 Stage 3 component PRs merged and integration pin/closure sync completed.** Component PRs merged: `cortex-os-contracts#26` (`c3165fb`), `cortex-os-backend#42` (`3dd6347`), `cortex-os-frontend#51` (`34095bd`); kickoff integration docs/ADR PR `cortex-os#36` merged earlier. Integration closure sync pins submodule SHAs, updates `docs/traceability.md` FR-008 for Stage 3 maps/routing/export + review-remediation coverage, updates `docs/integration/002_RELEASE_PROCESS.md` + `.system/MEMORY.md`, and marks ADR-0027 IMPLEMENTED.

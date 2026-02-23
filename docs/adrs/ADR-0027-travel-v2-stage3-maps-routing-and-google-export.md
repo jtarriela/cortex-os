@@ -1,6 +1,6 @@
 # ADR-0027: Travel v2 Stage 3 — Maps, Routing, and Google Maps Export
 
-**Status:** ACCEPTED
+**Status:** IMPLEMENTED
 **Date:** 2026-02-23  
 **Deciders:** Architecture review  
 **FR:** FR-008 (current baseline; travel FR expansion pending)  
