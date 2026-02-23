@@ -74,6 +74,13 @@ Habits includes structured Weekly Review records that persist:
 
 Weekly Review is not limited to a markdown template in v1; it is modeled and persisted for future analytics and synchronization.
 
+Weekly Review and Weekly Prep are separated in the UI/interaction model:
+
+- `Weekly Review` is reflection-only (`Done`, `Slipped`, `Adjustment`) with historical review browsing
+- `Weekly Prep` is planning-oriented and supports per-habit preparation data for the current review week
+
+Global environment checklist text remains supported only as a legacy compatibility field during the transition to per-habit prep snapshots.
+
 ### 5) Weekly Review look-forward plans sync to Calendar as linked projections
 
 Habit look-forward plan items generate local `calendar_event` blocks with explicit linkage metadata:
@@ -85,6 +92,8 @@ Habit look-forward plan items generate local `calendar_event` blocks with explic
 
 The linkage enables deterministic sync, re-sync, and reverse lookup.
 
+Habit-generated calendar blocks also carry a synced snapshot of per-habit Weekly Prep data (environment checklist + prep notes) so prep context is visible inside Calendar event details without requiring a live join back to the Habits UI.
+
 ### 6) Calendar edits on habit-generated blocks write back to the linked plan
 
 Existing calendar mutation semantics are extended for habit-generated events:
@@ -93,6 +102,8 @@ Existing calendar mutation semantics are extended for habit-generated events:
 - delete (`calendar.deleteEvent`) removes/marks removed the linked planned habit instance
 
 This delivers bidirectional editing while preserving a single logical schedule state.
+
+On re-sync (`habits.syncWeekPlan`), backend sync preserves user-owned event note fields (notably `description`, plus non-managed props such as `location`/`linked_note_id`) while updating managed habit schedule/linkage/prep projection fields.
 
 ### 7) Contracts and implementation sequencing follow paired PR governance
 
@@ -154,4 +165,3 @@ Implementation details, sequencing, TDD matrix, risks, and acceptance criteria a
 - [`docs/implementation/ADR-0032-atomic-habits-implementation-plan.md`](../implementation/ADR-0032-atomic-habits-implementation-plan.md)
 
 This ADR is `ACCEPTED` based on that plan; code implementation remains pending paired PRs across contracts/backend/frontend.
-

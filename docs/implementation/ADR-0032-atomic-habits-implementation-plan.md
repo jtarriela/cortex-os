@@ -83,6 +83,8 @@ Existing fields remain supported; new fields are added with backward-compatible 
 - `schedule_templates` (`array`, new; weekly anchor planning templates)
 - `sync_to_calendar` (`bool`, optional)
 - `calendar_block_type` (`string`, optional; expected values `event|task|reminder|deep-work`)
+- `prep_environment_checklist_items` (`string[]`, optional; per-habit prep defaults)
+- `prep_notes` (`string`, optional; per-habit prep default notes)
 - `streak` (`number`, existing; consistency streak)
 
 #### Compatibility default
@@ -96,6 +98,9 @@ Existing fields remain supported; new fields are added with backward-compatible 
 - `done_notes` (structured text/list payload)
 - `slipped_notes` (structured text/list payload)
 - `adjustment_note` (single text value)
+- `environment_checklist_items` (legacy global checklist; compatibility/deprecated in UI)
+- `habit_prep_items` (array of per-habit Weekly Prep snapshots)
+- `prep_migrated_from_global_env_at` (timestamp, optional; one-time legacy import marker)
 - `anchor_plan_items` (array of planned habit instances / anchor blocks)
 - `last_calendar_sync_at` (timestamp, optional)
 - `last_calendar_sync_result` (object, optional)
@@ -116,6 +121,9 @@ If not implemented as a separate page in the first coding slice, the same shape 
 - `habit_id` (`string`)
 - `habit_review_id` (`string`)
 - `habit_plan_instance_id` (`string`)
+- `habit_prep_environment_checklist_items` (`string[]`, synced snapshot)
+- `habit_prep_notes` (`string`, synced snapshot)
+- `habit_prep_week_start_date` (`string`, optional; review week label for Calendar UI)
 
 These fields provide deterministic linkage for bidirectional sync and idempotent reconciliation.
 
@@ -190,6 +198,10 @@ No new calendar command names are required for v1, but contracts docs must state
 - Weekly Review plan items are canonical for habit schedule intent.
 - Calendar blocks are projections of planned instances.
 - Calendar edits are allowed and write back to the linked planned instance, preserving a single logical schedule state.
+- Weekly Prep uses a hybrid source-of-truth:
+  - habit-level prep defaults live on `habit`
+  - per-week overrides/snapshots live on `habit_week_review.habit_prep_items`
+  - synced calendar blocks receive a projection snapshot for display only (not reverse-edited)
 
 ### Link identity
 
@@ -217,6 +229,8 @@ This supports idempotent upsert and direct reverse lookup on calendar edits.
 - Weekly Review explicit sync is authoritative for create/update/delete reconciliation runs.
 - Calendar edits after sync update the linked plan instance immediately.
 - Changing calendar event title/description does not rewrite the habit template or identity fields in v1.
+- `habits.syncWeekPlan` must preserve user-owned calendar event notes/props (at minimum `description`; also `location`, `linked_note_id`, and similar non-managed props) while refreshing managed habit linkage/schedule/prep snapshot fields.
+- Reverse calendar edits do not back-propagate event notes or habit prep snapshots into Weekly Prep or habit defaults in v1.
 
 ---
 
@@ -248,6 +262,8 @@ This supports idempotent upsert and direct reverse lookup on calendar edits.
 - Storage/App test: streak computed from union of `completed_dates` and `mvh_dates`
 - App test: `habits_get_summary` returns split + legacy combined counts
 - App test: `habits_sync_week_plan` idempotent upsert behavior
+- App test: `habits_sync_week_plan` projects per-habit prep snapshot props onto generated calendar events
+- App test: `habits_sync_week_plan` preserves existing `calendar_event.description` on re-sync
 - App test: `calendar_reschedule_event` updates linked habit plan
 - App test: `calendar_delete_event` updates linked habit plan
 
@@ -265,15 +281,17 @@ This supports idempotent upsert and direct reverse lookup on calendar edits.
 - `backend.smoke` for `toggleHabit(..., completionType)` payload
 - `backend.smoke` for `syncHabitWeekPlan` payload
 - Hook tests for dual-state completion and Weekly Review sync result handling
+- Hook tests for per-habit Weekly Prep seeding/default save/legacy global checklist import
 - UI tests for dual buttons + multi-state heatmap + Weekly Review sections
-- Calendar hook/UI tests for habit-generated event metadata handling
+- Calendar hook/UI tests for habit-generated event prep snapshot metadata handling (read-only Habit Prep + editable Event Notes)
 
 #### Green (minimal implementation)
 
 - Extend `types.ts`, `services/backend.ts`, `services/normalization.ts`
 - Add/extend Habits controller hooks (ADR-0017)
 - Rework `views/Habits.tsx` and supporting components for Atomic Habits + Weekly Review
-- Surface habit-generated calendar metadata in existing calendar views
+- Split `Weekly Review` (reflection) and `Weekly Prep` (per-habit prep + scheduling) UX
+- Surface habit-generated calendar metadata in existing calendar views (including per-habit prep snapshot in event details)
 
 ### `cortex-os` (integration)
 
@@ -357,4 +375,3 @@ Mapping to `/Users/jdtarriela/.codex/worktrees/df8f/cortex-os/.system/DOC_SYNC_C
   - docs-first kickoff + ADR acceptance recorded in this pass
 - Submodule SHAs:
   - deferred until FE/BE/contracts implementation PRs merge
-
