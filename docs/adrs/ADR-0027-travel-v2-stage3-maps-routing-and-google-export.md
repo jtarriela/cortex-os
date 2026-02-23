@@ -1,10 +1,20 @@
 # ADR-0027: Travel v2 Stage 3 — Maps, Routing, and Google Maps Export
 
-**Status:** PROPOSED  
+**Status:** ACCEPTED
 **Date:** 2026-02-23  
 **Deciders:** Architecture review  
 **FR:** FR-008 (current baseline; travel FR expansion pending)  
-**Related:** ADR-0006 (EAV/page model), ADR-0012 (test strategy), ADR-0015 (secure settings), ADR-0017 (frontend hooks layer), ADR-0025 (Stage 1 foundation), ADR-0026 (Stage 2 itinerary/budget), [`005_TRAVEL_MODULE_INTEGRATION_PLAN`](../integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md)
+**Related:** ADR-0006 (EAV/page model), ADR-0012 (test strategy), ADR-0015 (secure settings), ADR-0017 (frontend hooks layer), ADR-0025 (Stage 1 foundation), ADR-0026 (Stage 2 itinerary/budget), [`005_TRAVEL_MODULE_INTEGRATION_PLAN`](../integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md), [`ADR-0027 Stage 3 Implementation Spec`](../implementation/ADR-0027-stage3-travel-maps-routing-google-export-implementation.md)
+
+---
+
+## Implementation Plan
+
+Execution and review details for the ADR-0027 Stage 3 batch release live in:
+
+- [`ADR-0027 Stage 3 Implementation Spec`](../implementation/ADR-0027-stage3-travel-maps-routing-google-export-implementation.md)
+
+This document is the review-facing delivery specification (interfaces, atoms, tests, rollout, and cross-repo PR matrix) used to cross-reference code review discussions back to the accepted ADR decision.
 
 ---
 
@@ -113,4 +123,3 @@ The response model must support explicit unsupported/graceful-fail returns with 
 - Introduces Google Maps billing/quota dependency
 - Adds backend complexity for caching and transit leg stitching
 - Requires robust error UX for unsupported export targets and provider failures
-
