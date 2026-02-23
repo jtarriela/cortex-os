@@ -2,6 +2,7 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
+- **ADR-0027 Stage 3 implementation batch kicked off (issues + branches + implementation spec):** created parent `cortex-os#35` and child issues `cortex-os-contracts#25` / `cortex-os-backend#41` / `cortex-os-frontend#50`, cut/pushed issue-linked branches across all repos, and added review-facing implementation spec `docs/implementation/ADR-0027-stage3-travel-maps-routing-google-export-implementation.md` with ADR cross-reference.
 - **Travel v2 staged planning docs + ADR set added:** integration plan `docs/integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md` and stage ADRs `ADR-0025` through `ADR-0031` are now in repo as the execution blueprint for structured travel (locations/items/expenses, routing/maps, import/Gmail, AI planner, calendar push).
 - **Travel Stage 1/2 structured workspace implemented (initial slice):** backend/frontend/contracts now support `trip_location` / `trip_item` / `trip_expense`, workspace hydration, budget rollups, and legacy dual-read migration.
 - **Travel Stage 1/2 integrity patch pass completed in workspace (pending/performing local merge pin):** cross-trip location validation, travel kind guards, title-only markdown sync, duplicate-safe legacy migration, deterministic create-trip selection, hybrid per-location item pathing for new files, `travel.moveItem clearLocation?` contract semantics, and `useTravelWorkspace` controller tests are implemented.
@@ -59,7 +60,7 @@
 - ADR-0024: Finance mode selection + manual budgeting UI (**IMPLEMENTED** — Settings-driven mode + YNAB auth in Integrations + manual budget template)
 - ADR-0025: Travel v2 Stage 1 — Foundation, RAG indexing parity, and legacy migration (PROPOSED)
 - ADR-0026: Travel v2 Stage 2 — Itinerary, flights/lodging, budgeting (PROPOSED)
-- ADR-0027: Travel v2 Stage 3 — Maps, routing, and Google export (PROPOSED)
+- ADR-0027: Travel v2 Stage 3 — Maps, routing, and Google export (ACCEPTED)
 - ADR-0028: Travel v2 Stage 4A — Web/text/screenshot import (PROPOSED)
 - ADR-0029: Travel v2 Stage 4B — Gmail reservation scan (PROPOSED)
 - ADR-0030: Travel v2 Stage 5 — AI copilot + optimization preview (PROPOSED)
