@@ -1,6 +1,6 @@
 # ADR-0030: Travel v2 Stage 5 — AI Copilot for Inspiration and Optimization Preview (Explicit Apply)
 
-**Status:** PROPOSED  
+**Status:** IMPLEMENTED  
 **Date:** 2026-02-23  
 **Deciders:** Architecture review  
 **FR:** FR-008 (current baseline; travel FR expansion pending)  
@@ -76,6 +76,13 @@ Response requirements:
 - warnings / constraints conflicts
 - diff-style output for proposed order/time changes
 
+### Implementation Notes (2026-02-23)
+
+- `travel.optimizeDayPlanPreview` is implemented as `reorder_first_v1` (reorder-first; retiming is informational-only in v1)
+- frontend v1 supports explicit `Apply All` only, using existing travel mutation commands (no AI write command)
+- optimization preview returns typed `changes[]` (`reorder` / `note`) plus `applyGuard` (`sourceItems[]`, `snapshotHash`) for stale-preview blocking
+- optimization preview may return `responseMode="degraded_deterministic"` when deterministic preview generation succeeds but AI rationale enrichment fails
+
 ---
 
 ## Safety and UX Rules
@@ -120,4 +127,3 @@ Travel AI suggestions should benefit from Stage 1 RAG indexing parity and linked
 
 - Users must perform explicit apply actions (slower than full automation)
 - AI quality varies by provider/model and available context
-
