@@ -1,6 +1,6 @@
 # Local Dev — Getting Started
 
-**Last updated:** 2026-02-19
+**Last updated:** 2026-02-23
 
 ## Quick Start (Recommended: Dev Container)
 
@@ -103,6 +103,7 @@ git submodule update --remote --merge
 
 # Refresh frontend dependencies after a submodule SHA update
 cd frontend && npm ci && cd ..
+# Required when frontend deps changed at the new SHA (avoids stale node_modules import-resolution errors)
 
 # After submodule merges, bump SHA in integration repo
 git add backend frontend contracts
@@ -132,3 +133,9 @@ Increase Docker memory limit to ≥ 4 GB in Docker Desktop → Settings → Reso
 
 **`cargo test` fails in container:**
 Run `xvfb-run cargo test` if tests attempt to open a Tauri window (headless display required).
+
+**Linked Obsidian vault shows "feature is disabled":**
+Set `CORTEX_ENABLE_OBSIDIAN_LINK=1` (or unset it), then restart the backend/Tauri app.
+
+**Vite import resolution fails after pulling latest frontend submodule:**
+From repo root run `cd frontend && npm ci` to refresh `node_modules` for the pinned frontend SHA.

@@ -1,7 +1,9 @@
 # ADR-0022: Vault Workbench + Linked Obsidian Write-Back (CodeMirror Source-First)
 
-**Status:** ACCEPTED
+**Status:** IMPLEMENTED
 **Date:** 2026-02-22
+**Accepted:** 2026-02-22
+**Implemented:** 2026-02-23
 **Deciders:** Architecture review
 **FR:** FR-003, FR-023, FR-028, FR-029
 **Related:** ADR-0015 (vault onboarding + save-commit indexing), ADR-0019 (linked vault by path), ADR-0020 (TipTap block editor scope)
@@ -86,15 +88,25 @@ Linked-note ingestion/write paths preserve raw markdown body/frontmatter content
 
 ---
 
-## Implementation Status (2026-02-22)
+## Implementation Status (2026-02-23)
 
-Workspace implementation has started under this ADR:
+Workspace implementation is complete under this ADR:
 
-- Contracts updated with `VaultLink.mode` expansion and `obsidian.noteSave` response union
-- Backend updated for `read_write` mode validation, linked note hash persistence, raw markdown preservation, and `obsidian_note_save` conflict flow
-- Frontend updated with Vault Workbench tabs, CodeMirror markdown editor, linked save conflict modal, and keyboard shortcuts (`Cmd/Ctrl+S`, `Cmd/Ctrl+W`, `Cmd/Ctrl+Shift+[`, `Cmd/Ctrl+Shift+]`, `Cmd/Ctrl+P`)
+- Contracts delivered with `VaultLink.mode` expansion and `obsidian.noteSave` response union.
+- Backend delivered `read_write` mode validation, linked note hash persistence, raw markdown preservation, and `obsidian_note_save` conflict flow.
+- Frontend delivered Vault Workbench tabs, CodeMirror markdown editor, linked save conflict modal, and keyboard shortcuts (`Cmd/Ctrl+S`, `Cmd/Ctrl+W`, `Cmd/Ctrl+Shift+[`, `Cmd/Ctrl+Shift+]`, `Cmd/Ctrl+P`).
+- Integration pins and release logs were synchronized in the workspace release process.
 
-Final `IMPLEMENTED` transition requires merged paired PR evidence across `cortex-os-contracts`, `cortex-os-backend`, and `cortex-os-frontend` plus integration pin sync.
+### Post-Implementation UX Refinement (2026-02-23)
+
+The Vault Workbench received non-contract UX enhancements that remain within this ADR's scope:
+
+- preview-first note mode with explicit `Preview` / `Edit Source` toggle (source editing still powers linked write-back)
+- split explorer sections for `Cortex Files` and `Obsidian Files`, with folders collapsed by default
+- rendered markdown preview support for clickable Obsidian wikilinks (same-tab navigation) with best-effort heading/block anchor scroll
+- right-drawer note `Inspect` tab with linked source/index/sync metadata, exact backlinks, outgoing links, and conflict/version diagnostics backed by `search_graph_links` and `obsidian_note_inspect`
+
+These changes improve operability and inspection/debuggability without altering ADR-0022 conflict policy or source-fidelity guarantees.
 
 ---
 
