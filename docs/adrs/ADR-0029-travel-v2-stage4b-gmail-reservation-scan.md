@@ -1,10 +1,10 @@
 # ADR-0029: Travel v2 Stage 4B — User-Triggered Gmail Reservation Scan and Import
 
-**Status:** PROPOSED  
+**Status:** ACCEPTED  
 **Date:** 2026-02-23  
 **Deciders:** Architecture review  
 **FR:** FR-008 (current baseline; travel FR expansion pending)  
-**Related:** ADR-0004 (AI multimodal), ADR-0005 (AI action/HITL patterns), ADR-0012 (test strategy), ADR-0014 (Google integration patterns), ADR-0015 (secure settings), ADR-0025 (Stage 1 foundation), ADR-0028 (Stage 4A import pipeline), [`005_TRAVEL_MODULE_INTEGRATION_PLAN`](../integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md)
+**Related:** ADR-0004 (AI multimodal), ADR-0005 (AI action/HITL patterns), ADR-0012 (test strategy), ADR-0014 (Google integration patterns), ADR-0015 (secure settings), ADR-0025 (Stage 1 foundation), ADR-0028 (Stage 4A import pipeline), [`005_TRAVEL_MODULE_INTEGRATION_PLAN`](../integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md), [`ADR-0028/0029 Stage 4 Implementation Spec`](../implementation/ADR-0028-0029-stage4-travel-import-gmail-implementation.md)
 
 ---
 
@@ -135,4 +135,3 @@ The policy remains:
 
 - Users must manually trigger scans
 - Gmail OAuth scope and provider rollout may add operational/compliance overhead
-
