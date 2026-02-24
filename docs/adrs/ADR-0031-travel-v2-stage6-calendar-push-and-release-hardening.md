@@ -1,9 +1,9 @@
 # ADR-0031: Travel v2 Stage 6 — One-Way Calendar Push and Release Hardening
 
-**Status:** PROPOSED  
-**Date:** 2026-02-23  
-**Deciders:** Architecture review  
-**FR:** FR-008 (current baseline), FR-015, FR-026, FR-027 (integration touchpoints; travel FR expansion pending)  
+**Status:** IMPLEMENTED
+**Date:** 2026-02-23
+**Deciders:** Architecture review
+**FR:** FR-008 (current baseline), FR-015, FR-026, FR-027 (integration touchpoints; travel FR expansion pending)
 **Related:** ADR-0007 (schedule/calendar convergence), ADR-0012 (test strategy), ADR-0014 (Google Calendar integration), ADR-0017 (frontend hooks layer), ADR-0018 (DayFlow calendar workspace), ADR-0025 through ADR-0030 (Travel v2 stages 1-5), [`005_TRAVEL_MODULE_INTEGRATION_PLAN`](../integration/005_TRAVEL_MODULE_INTEGRATION_PLAN.md)
 
 ---
@@ -130,4 +130,3 @@ This enables deterministic frontend status messaging and retry flows.
 
 - Calendar edits do not update Travel in v1
 - Stage 6 bundles substantial QA/doc-sync work before rollout completion
-
