@@ -2,6 +2,7 @@
 # MEMORY — Cortex OS (Integration)
 
 ## Current Focus
+- **AI V1.1 class-planner + domain-aware chat context implemented in workspace:** backend now supports class-scope project-plan preview queueing (`ai_class_project_plan_preview`) and explicit Morning Review apply execution (`review_apply`) with review apply lifecycle metadata; chat now auto-routes class/finance/schedule intents with typed tool-results and frontend consumes scope-selection/preview/apply UX.
 - **ADR-0031 Stage 6 Travel calendar push + release hardening merged and pinned in integration:** component PRs `cortex-os-contracts#30`, `cortex-os-backend#46`, and `cortex-os-frontend#56` are merged; integration submodules are pinned to contracts `d4d905b`, backend `c6204a4`, frontend `f2ea7ff`, and FR/traceability/ADR/MEMORY docs are synchronized for Stage 6 closure.
 - **ADR-0030 Stage 5 Travel AI copilot + optimization preview merged and pinned in integration:** component PRs `cortex-os-contracts#29`, `cortex-os-backend#45`, and `cortex-os-frontend#54` are merged; integration submodules are pinned to contracts `10bf61b`, backend `9fc9e58`, frontend `e6f82ac`, and FR/traceability/ADR/MEMORY docs are synchronized for Stage 5 closure.
 - **Travel Stage 4A/4B (ADR-0028/0029) implemented and integration pin/docs sync completed:** component PRs `cortex-os-contracts#28`, `cortex-os-backend#44`, and `cortex-os-frontend#53` are merged; integration submodule pins now target contracts `36e255c`, backend `b8b30bf`, and frontend `ed441a2`. Delivery includes Stage 4 manual import + Gmail reservation scan flows, Gmail scope-upgrade auth support with granted-scope persistence, and review-remediation fixes (same-account metadata preservation with account-change sync-state reset, trip-switch preview reset, and stale-preview invalidation on preview failures).
@@ -28,7 +29,7 @@
 - Frontend: backend IPC is wired for core domains; app shell state now uses Zustand (`stores/appStore.ts`); realtime event subscription store (`stores/realtimeStore.ts`) invalidates active views on backend page events.
 - Backend: Tauri app + SQLCipher storage + page repository implemented; Google OAuth + calendar list/create + incremental sync + outbound create/update/delete reconciliation are implemented; page mutation commands emit realtime events (`page_created`, `page_updated`, `page_deleted`).
 - Contracts: IPC wiring matrix maintained in contracts repo; realtime event stream contract documented for Phase 3 foundation.
-- Original architecture vision in `docs/technical_architecture/` (001–004). Frontend has diverged (domain-specific types instead of unified Page model; no Tauri yet; AI in frontend, not backend).
+- Original architecture vision in `docs/technical_architecture/` (001–004). Frontend still diverges in domain-specific type surfaces, but AI routing/execution is now backend-first via Tauri IPC (`ai_chat`, `review_*`, `ai_class_project_plan_preview`) with frontend consuming typed tool results and stream events.
 
 ## Active ADRs
 
