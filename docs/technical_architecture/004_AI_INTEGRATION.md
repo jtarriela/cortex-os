@@ -319,6 +319,8 @@ On first launch, the user sets a vault password → Argon2id derives the DB key 
 
 ## 4) RAG Pipeline (Retrieval-Augmented Generation)
 
+> **Implementation Update (2026-02-25):** `ai_chat` now uses a hybrid **chunk-level** retrieval path in the backend: chunk FTS (`search_chunks_fts`) + optional chunk vector retrieval (`search_chunk_vec`, only when indexed rows exist) merged via RRF, followed by 1-hop graph expansion from `graph_edges`. Chat query-time retrieval does **not** trigger a full `sync_index`; if chunk indexes are not ready, chat falls back to page-level FTS (`pages_fts`). AI retrieval exclusions are applied before context injection.
+
 ### 4.1 Pipeline Overview
 
 ```mermaid
@@ -328,8 +330,8 @@ flowchart LR
     EMBED --> FTS["FTS5 Search\nBM25 scoring"]
     VEC & FTS --> MERGE["Merge + Deduplicate\n(RRF or weighted union)"]
     MERGE --> GRAPH["Graph Expansion\n1-hop neighbors of\ntop results"]
-    GRAPH --> RERANK["BM25 Rerank\n(over expanded set)"]
-    RERANK --> CONTEXT["Build Context Window\ntop-N chunks + metadata"]
+    GRAPH --> RERANK["Final Rank\n(RRF + graph bonus;\nBM25 rerank optional)"]
+    RERANK --> CONTEXT["Build Context Window\ntop chunks + full bodies\nfor top note pages"]
     CONTEXT --> LLM["LLM Call\n(system prompt + context + question)"]
     LLM --> RESP["Response\nwith source citations"]
 ```
@@ -338,8 +340,8 @@ flowchart LR
 
 **Step 1 — Dual retrieval:**
 
-- **Vector search:** Embed the query with the same model used for indexing (e.g., `nomic-embed-text` via Ollama). Query `vec_chunks` for top-20 by cosine similarity.
-- **FTS5 search:** Run the query against `pages_fts` for BM25-ranked results. Return top-20 chunks.
+- **Vector search (optional):** Embed the query and query `search_chunk_vec` for top chunk matches by vector distance. In `ai_chat`, this runs only when the chunk vector index already contains rows (no forced sync/reindex on query).
+- **FTS5 search:** Run chunk-level lexical search against `search_chunks_fts` (external-content FTS over `search_chunks`). `pages_fts` remains a fallback when chunk indexes are unavailable.
 
 **Step 2 — Merge (Reciprocal Rank Fusion):**
 
@@ -351,9 +353,17 @@ Where `k = 60` (standard RRF constant). This combines semantic similarity (vecto
 
 **Step 3 — Graph expansion:** For the top-10 merged results, fetch 1-hop neighbors from `graph_edges` (wikilinks, relations, AI-suggested links). Add their chunks to the candidate pool. This captures contextually related notes that neither vector nor keyword search would find alone.
 
-**Step 4 — Final rerank:** BM25 rerank the expanded candidate set against the original query. Take top-N chunks (N = 5–10, configurable, bounded by context window budget).
+**Step 4 — Final rank:** Current `ai_chat` implementation ranks by RRF score plus a small graph expansion bonus and enforces caps on total chunks and unique pages. A dedicated post-expansion BM25 rerank remains an optional follow-up optimization.
 
-**Step 5 — Context assembly:**
+**Step 5 — Context assembly (implemented behavior):**
+
+- assemble a stable `Context:` block with separators and page metadata (`kind`, `title`, `path`)
+- include **full note bodies** (capped) for the highest-ranked note pages
+- include **chunk excerpts** for remaining pages
+- expand linked schedule/task notes when `linked_note_id` exists
+- apply AI retrieval exclusions and PII redaction before sending to cloud providers
+
+Illustrative format:
 
 ```
 System: You are a knowledge assistant for a personal vault of notes.
@@ -363,11 +373,15 @@ the answer, say so.
 
 Context:
 ---
-[Note: "Distributed Systems Patterns" | Section: "Event Sourcing"]
+[note] Distributed Systems Patterns (path: Architecture/Distributed Systems Patterns.md)
+Evidence:
+Full body:
 Event sourcing stores state changes as an append-only log...
 ---
-[Note: "Cortex Architecture v1" | Section: "DB Actor Pattern"]
-All database access flows through a single DB Actor thread...
+[note] Cortex Architecture v1 (path: docs/architecture/Cortex Architecture v1.md)
+Evidence:
+Chunks:
+- All database access flows through a single DB Actor thread...
 ---
 
 User: How does the DB Actor pattern relate to event sourcing?
@@ -406,9 +420,10 @@ fn chunk_note(body: &str, max_chars: usize, hard_max: usize) -> Vec<Chunk> {
 ### 4.5 SQLite Schema for RAG
 
 ```sql
--- Already defined in 001_architecture.md:
--- vec_chunks (sqlite-vec virtual table)
--- chunks (metadata: page_id, heading_path, content_hash, content_text)
+-- Runtime retrieval tables (current implementation)
+-- search_chunks (chunk metadata/content rows for page chunks)
+-- search_chunks_fts (FTS5 external-content table over search_chunks.content)
+-- search_chunk_vec (sqlite-vec virtual table keyed by chunk rowid)
 -- graph_edges (for graph expansion step)
 -- pages_fts (FTS5 for BM25)
 
