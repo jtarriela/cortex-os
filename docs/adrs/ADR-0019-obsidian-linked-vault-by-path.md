@@ -220,3 +220,21 @@ Per AGENTS/protocol, backend command additions require paired PR updates in `cor
 - periodic reconcile scan + watcher coalescing
 - optional hash fallback when metadata signals are ambiguous
 - explicit UI labels: "Primary Cortex Vault" vs "Linked Obsidian Vault (Read-only)"
+
+---
+
+## Implementation Note (2026-02-25): `ai_chat` RAG V2 Retrieval Upgrade
+
+To align `ai_chat` more closely with this ADR's "indexed retrieval at query time" intent (Stage C), Cortex now uses a hybrid chunk retrieval path for chat context assembly:
+
+- chunk-level lexical search via `search_chunks_fts` (FTS5 external-content index over `search_chunks`)
+- optional chunk vector retrieval via `search_chunk_vec` **only when the vector index already has rows**
+- reciprocal-rank fusion (RRF) merge + 1-hop graph expansion from `graph_edges` (wikilinks/backlinks)
+- context assembly that can include capped **full note bodies** for top-ranked note pages plus chunk excerpts for the rest
+
+Important behavior guarantees:
+
+- chat query-time retrieval does **not** call full `sync_index` / full-vault reindex
+- if chunk indexes are not ready, chat falls back to page-level FTS (`pages_fts`)
+- AI retrieval exclusions are applied before context is injected into provider prompts
+- chunk indexing is path-aware (`Title/Path/Kind` header prefix) to improve matches for folder-oriented queries (e.g., `Nick C`)
