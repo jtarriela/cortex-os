@@ -47,6 +47,20 @@ echo "Frontend dir:   $FRONTEND_DIR"
 echo "Tauri app dir:  $TAURI_APP_DIR"
 echo "Using dev port: $DEV_PORT"
 
+kill_stale_frontend_servers() {
+  local pids
+  pids="$(
+    ps -eo pid=,cmd= \
+      | awk -v dir="$FRONTEND_DIR" '/node .*\/node_modules\/\.bin\/vite/ { if (index($0, dir) > 0) print $1 }'
+  )"
+  if [[ -n "${pids//[[:space:]]/}" ]]; then
+    echo "Stopping stale frontend Vite process(es): $pids"
+    # shellcheck disable=SC2086
+    kill $pids 2>/dev/null || true
+    sleep 1
+  fi
+}
+
 cleanup() {
   if [[ -n "${FRONTEND_PID:-}" ]] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
     echo "Stopping frontend dev server (pid=$FRONTEND_PID)..."
@@ -56,10 +70,12 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+kill_stale_frontend_servers
+
 echo "Starting frontend dev server..."
 (
   cd "$FRONTEND_DIR"
-  npm run dev -- --host 0.0.0.0 --port "$DEV_PORT"
+  npm run dev -- --host 0.0.0.0 --port "$DEV_PORT" --strictPort
 ) &
 FRONTEND_PID=$!
 
